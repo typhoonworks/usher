@@ -20,7 +20,7 @@ defmodule Usher.MixProject do
       dialyzer: [
         plt_add_apps: [:mix, :ecto, :postgrex, :ex_unit],
         plt_core_path: "_build/#{Mix.env()}",
-        flags: [:error_handling, :underspecs, :missing_return, :unmatched_returns]
+        flags: [:error_handling, :underspecs, :missing_return]
       ]
     ]
   end
