@@ -8,15 +8,15 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 ## Current Features
 - 🔐 **Token generation** using cryptographic functions
 - 🏗️ **Framework agnostic** - works with any Ecto-based application
-- 🌐 **Phoenix helpers** for seamless integration with Phoenix applications
 
 ## What's planned?
 - [ ] Auto-cleanup of expired invitations.
 - [ ] More advanced usage tracking.
    - [ ] Metadata about those who visited and used the invitation (approx. location, user agent, etc.).
    - [ ] Linking invitation tokens to user accounts (e.g. to track which user registered with which invitation).
-- [ ] Invitation expiration after X number of uses.
-- [ ] Descriptions for invitiation links so you can provide context for its usage.
+- [ ] Invitation expiration after X number of uses (including one-time use links).
+- [ ] One-time use invitation links tied to specific email addresses.
+- [ ] Descriptions for invitation links so you can provide context for its usage.
 
 ## Installation
 Add `usher` to your list of dependencies in `mix.exs`:
@@ -112,10 +112,6 @@ IO.puts("#{updated_invitation.joined_count} users have used this invitation")
 # Simple URL
 url = Usher.invitation_url("abc123", "https://myapp.com/signup")
 # => "https://myapp.com/signup?invitation_token=abc123"
-
-# URL with existing parameters
-url = Usher.invitation_url("abc123", "https://myapp.com/signup?ref=email")
-# => "https://myapp.com/signup?ref=email&invitation_token=abc123"
 ```
 
 ### Cleaning Up Expired Invitations
@@ -151,9 +147,7 @@ defmodule MyApp.InvitationCleanup do
         # `Repo.delete_all/2` expired invitations in bulk.
         case Usher.delete_invitation(invitation) do
           {:ok, _} -> acc + 1
-          {:error, _} -> 
-            Logger.warning("Failed to delete invitation #{invitation.id}")
-            acc
+          {:error, _} -> acc
         end
       end)
     
@@ -391,24 +385,26 @@ end
 ```
 
 ### Creating Your Own Phoenix Plug
-If you want to create a custom plug for invitation requirements, here's an example implementation you can use as a starting point:
+If you want to create a custom plug for invitations, here's an example implementation you can use:
 ```elixir
 defmodule MyApp.InvitationPlug do
-  @behaviour Plug
-
-  import Phoenix.Controller
+  import Phoenix.Controller, only: [put_flash: 3, redirect: 2]
   import Plug.Conn
+
+  @behaviour Plug
 
   def init(opts), do: opts
 
   def call(conn, opts) do
-    redirect_to = Keyword.get(opts, :redirect_on_error_to, ~p"/")
+    redirect_on_error_to = Keyword.get(opts, :redirect_on_error_to, "/")
     flash_key = Keyword.fetch!(opts, :flash_key)
 
     case validate_invitation_from_params(conn.params) do
       {:ok, invitation} ->
         conn
-        |> Plug.Conn.assign(:invitation, invitation)
+        |> assign(:invitation, invitation)
+        # If you don't need to invitation token for the entire session,
+        # you can use `assign/3` instead.
         |> put_invitation_token_in_session(invitation.token)
 
       {:error, reason} ->
@@ -417,7 +413,7 @@ defmodule MyApp.InvitationPlug do
         conn
         |> put_flash(flash_key, message)
         |> redirect(to: redirect_on_error_to)
-        |> Plug.Conn.halt()
+        |> halt()
     end
   end
 
@@ -433,7 +429,7 @@ defmodule MyApp.InvitationPlug do
     case get_invitation_token_from_session(conn) do
       token when is_binary(token) ->
         Usher.validate_invitation_token(token)
-      
+
       _ ->
         {:error, :missing_token}
     end
@@ -443,7 +439,7 @@ defmodule MyApp.InvitationPlug do
     case params["invitation_token"] do
       token when is_binary(token) ->
         Usher.validate_invitation_token(token)
-      
+
       _ ->
         {:error, :missing_token}
     end

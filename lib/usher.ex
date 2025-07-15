@@ -219,9 +219,6 @@ defmodule Usher do
     uri = URI.parse(base_url)
     query = URI.encode_query([{"invitation_token", token}])
 
-    existing_query = uri.query || ""
-    final_query = if existing_query == "", do: query, else: existing_query <> "&" <> query
-
-    %{uri | query: final_query} |> URI.to_string()
+    %{uri | query: query} |> URI.to_string()
   end
 end

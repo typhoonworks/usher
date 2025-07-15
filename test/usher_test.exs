@@ -68,10 +68,5 @@ defmodule UsherTest do
       url = Usher.invitation_url("abc123", "https://example.com/signup")
       assert url == "https://example.com/signup?invitation_token=abc123"
     end
-
-    test "appends to existing query parameters" do
-      url = Usher.invitation_url("abc123", "https://example.com/signup?ref=email")
-      assert url == "https://example.com/signup?ref=email&invitation_token=abc123"
-    end
   end
 end
