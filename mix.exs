@@ -1,12 +1,13 @@
 defmodule Usher.MixProject do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.1.2"
   @source_url "https://github.com/typhoonworks/usher"
 
   def project do
     [
       app: :usher,
+      name: "Usher",
       version: @version,
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -69,7 +70,7 @@ defmodule Usher.MixProject do
 
   defp package do
     [
-      name: "Usher",
+      name: "usher",
       maintainers: ["Arda Can Tugay", "Rui Freitas"],
       licenses: ["MIT"],
       links: %{GitHub: @source_url},
