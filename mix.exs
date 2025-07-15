@@ -17,7 +17,6 @@ defmodule Usher.MixProject do
       description: description(),
       source_url: "https://github.com/typhoonworks/usher",
       homepage_url: "https://github.com/typhoonworks/usher",
-
       dialyzer: [
         plt_add_apps: [:mix, :ecto, :postgrex, :ex_unit],
         plt_core_path: "_build/#{Mix.env()}",
