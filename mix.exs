@@ -16,7 +16,13 @@ defmodule Usher.MixProject do
       package: package(),
       description: description(),
       source_url: "https://github.com/typhoonworks/usher",
-      homepage_url: "https://github.com/typhoonworks/usher"
+      homepage_url: "https://github.com/typhoonworks/usher",
+
+      dialyzer: [
+        plt_add_apps: [:mix, :ecto, :postgrex, :ex_unit],
+        plt_core_path: "_build/#{Mix.env()}",
+        flags: [:error_handling, :underspecs, :missing_return, :unmatched_returns]
+      ]
     ]
   end
 

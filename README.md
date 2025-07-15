@@ -29,6 +29,8 @@ def deps do
 end
 ```
 
+Usher requires Elixir 1.14 or later, and OTP 25 or later. It may work with earlier versions, but it wasn't tested against them.
+
 ## Setup
 
 ### 1. Database Migration
