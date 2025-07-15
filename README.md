@@ -1,5 +1,15 @@
 # Usher
-> 💧 This library is not currently published on Hex, but will be soon!
+<p>
+  <a href="https://hex.pm/packages/usher">
+    <img alt="Hex Version" src="https://img.shields.io/hexpm/v/usher.svg">
+  </a>
+  <a href="https://hexdocs.pm/usher">
+    <img src="https://img.shields.io/badge/docs-hexdocs-blue" alt="HexDocs">
+  </a>
+  <a href="https://github.com/typhoonworks/usher/actions">
+    <img alt="CI Status" src="https://github.com/typhoonworks/usher/workflows/ci/badge.svg">
+  </a>
+</p>
 
 Usher is a web framework-agnostic invitation link management library for any Elixir application with Ecto.
 
