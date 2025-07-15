@@ -31,7 +31,7 @@ jobs:
 
     services:
       postgres:
-        image: ${{ matrix.tuple.postgres }}
+        image: postgres:${{ matrix.tuple.postgres }}
         ports:
           - 5432:5432
         env:
@@ -56,10 +56,9 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ matrix.tuple.elixir }}-${{ matrix.tuple.erlang }}-${{ github.ref }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ matrix.tuple.elixir }}-${{ matrix.tuple.erlang }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ matrix.tuple.elixir }}-${{ matrix.tuple.erlang }}-${{ github.ref }}-
-            ${{ matrix.tuple.elixir }}-${{ matrix.tuple.erlang }}-refs/heads/main-
+            ${{ matrix.tuple.elixir }}-${{ matrix.tuple.erlang }}-
 
       - run: mix deps.get --only $MIX_ENV
 
@@ -72,3 +71,5 @@ jobs:
       - run: mix do ecto.create, ecto.migrate
 
       - run: mix test
+
+      - run: mix dialyzer

@@ -35,11 +35,11 @@ defmodule Usher.MixProject do
 
   defp deps do
     [
-      {:ecto, "~> 3.10"},
-      {:ecto_sql, "~> 3.10"},
-      {:postgrex, "~> 0.16", optional: true},
-      {:ex_doc, "~> 0.29", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.3", only: [:dev, :test], runtime: false}
+      {:ecto, "~> 3.13"},
+      {:ecto_sql, "~> 3.13"},
+      {:postgrex, "~> 0.20", optional: true},
+      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -47,7 +47,8 @@ defmodule Usher.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test.setup": ["ecto.drop --quiet", "ecto.create", "ecto.migrate"]
+      "test.setup": ["ecto.drop --quiet", "ecto.create", "ecto.migrate"],
+      lint: ["format", "dialyzer"]
     ]
   end
 
