@@ -2,6 +2,7 @@ defmodule Usher.MixProject do
   use Mix.Project
 
   @version "0.1.0"
+  @source_url "https://github.com/typhoonworks/usher"
 
   def project do
     [
@@ -15,13 +16,9 @@ defmodule Usher.MixProject do
       docs: docs(),
       package: package(),
       description: description(),
-      source_url: "https://github.com/typhoonworks/usher",
-      homepage_url: "https://github.com/typhoonworks/usher",
-      dialyzer: [
-        plt_add_apps: [:mix, :ecto, :postgrex, :ex_unit],
-        plt_core_path: "_build/#{Mix.env()}",
-        flags: [:error_handling, :underspecs, :missing_return]
-      ]
+      source_url: @source_url,
+      homepage_url: @source_url,
+      dialyzer: dialyzer()
     ]
   end
 
@@ -72,10 +69,19 @@ defmodule Usher.MixProject do
 
   defp package do
     [
+      name: "Usher",
       maintainers: ["Arda Can Tugay", "Rui Freitas"],
       licenses: ["MIT"],
-      links: %{GitHub: "https://github.com/typhoonworks/usher"},
-      files: ~w[lib .formatter.exs mix.exs README.md LICENSE.md]
+      links: %{GitHub: @source_url},
+      files: ~w[lib .formatter.exs mix.exs README* LICENSE*]
+    ]
+  end
+
+  defp dialyzer do
+    [
+      plt_add_apps: [:mix, :ecto, :postgrex, :ex_unit],
+      plt_core_path: "_build/#{Mix.env()}",
+      flags: [:error_handling, :underspecs, :missing_return]
     ]
   end
 
