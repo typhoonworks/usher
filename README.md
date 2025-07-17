@@ -53,9 +53,10 @@ Add the Usher schema to your migration:
 ```elixir
 defmodule MyApp.Repo.Migrations.CreateUsherTables do
   use Ecto.Migration
+  import Usher.Migration
 
   def change do
-    Usher.Migration.create_usher_invitations_table()
+    migrate_to_latest()
   end
 end
 ```
@@ -65,6 +66,13 @@ Run the migration:
 mix ecto.migrate
 ```
 
+**For existing installations upgrading to a new version:**
+```bash
+mix ecto.gen.migration upgrade_usher_tables
+```
+
+Use the same migration code - `migrate_to_latest()` will automatically detect your current version and apply only the necessary migrations.
+
 ### 2. Configuration
 Configure Usher in your `config/config.exs`:
 ```elixir
@@ -72,7 +80,8 @@ config :usher,
   repo: MyApp.Repo,
   token_length: 16,
   default_expires_in: {7, :day},
-  table_name: "usher_invitations"
+  table_name: "usher_invitations",
+  name_required: false
 ```
 
 All the values above have defaults, which you can find in `Usher.Config`.
@@ -84,6 +93,11 @@ All the values above have defaults, which you can find in `Usher.Config`.
 # Create with defaults (7-day expiration, generated token)
 {:ok, invitation} = Usher.create_invitation()
 
+# Create with a name
+{:ok, invitation} = Usher.create_invitation(%{
+  name: "Team Welcome Invitation"
+})
+
 # Create with custom expiration
 {:ok, invitation} = Usher.create_invitation(%{
   expires_at: DateTime.add(DateTime.utc_now(), 30, :day)
@@ -93,6 +107,11 @@ All the values above have defaults, which you can find in `Usher.Config`.
 {:ok, invitation} = Usher.create_invitation(%{
   token: "custom-invite-token"
 })
+
+# Create with name requirement (validates that name is provided)
+{:ok, invitation} = Usher.create_invitation(%{
+  name: "Required Name"
+}, require_name: true)
 ```
 
 ### Validating Invitations
@@ -106,7 +125,26 @@ case Usher.validate_invitation_token("abc123") do
     # Token doesn't exist
     IO.puts("Invalid invitation token")
     
-  {:error, :expired} -> 
+  {:error, :invitation_expired} -> 
+    # Token exists but expired
+    IO.puts("This invitation has expired")
+end
+
+# Validate with name requirement
+case Usher.validate_invitation_token("abc123", require_name: true) do
+  {:ok, invitation} -> 
+    # Valid invitation with name - proceed with registration
+    IO.puts("Welcome #{invitation.name}! Invitation expires: #{invitation.expires_at}")
+    
+  {:error, :name_required} -> 
+    # Token exists but has no name
+    IO.puts("This invitation requires a name")
+    
+  {:error, :invalid_token} -> 
+    # Token doesn't exist
+    IO.puts("Invalid invitation token")
+    
+  {:error, :invitation_expired} -> 
     # Token exists but expired
     IO.puts("This invitation has expired")
 end
@@ -495,6 +533,7 @@ end
 | `:token_length` | `16` | Length of generated invitation tokens |
 | `:default_expires_in` | `{7, :day}` | Default expiration period for new invitations |
 | `:table_name` | `"usher_invitations"` | Database table name for invitations |
+| `:name_required` | `false` | Whether to require names for invitations by default |
 
 ## Examples
 
@@ -512,16 +551,64 @@ invitations = Usher.list_invitations()
 invite_url = Usher.invitation_url(invitation.token, "https://myapp.com/signup")
 ```
 
-## Contributing
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests (`mix test`)
-4. Commit your changes (`git commit -am 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+## Development Setup
+
+### Prerequisites
+- Elixir 1.14+ and OTP 25+
+- Docker and Docker Compose (for PostgreSQL)
+
+### Getting Started
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/typhoonworks/usher.git
+   cd usher
+   ```
+
+2. **Install dependencies**
+   ```bash
+   mix deps.get
+   ```
+
+3. **Start PostgreSQL with Docker**
+   ```bash
+   docker-compose up -d
+   ```
+   This starts PostgreSQL on port 2345 and includes Adminer (database admin UI) on port 8085.
+
+4. **Set up the test database**
+   ```bash
+   mix test.setup
+   ```
+   This creates the test database and runs migrations. You only need to run this once (or when you want to reset the test database).
+
+5. **Run the tests**
+   ```bash
+   mix test
+   ```
+
+### Development Commands
+- `mix test.setup` - Create and migrate test database (run once)
+- `mix test` - Run all tests
+- `mix lint` - Run formatter and dialyzer
+- `mix docs` - Generate documentation
+- `mix ecto.reset` - Reset test database (if needed)
+
+### Database Access
+When using Docker Compose, you can access:
+- **PostgreSQL**: `localhost:2345` (user: `postgres`, password: `postgres`)
+- **Adminer**: http://localhost:8085 (web-based database admin)
 
 ### Testing
-Usher requires PostgreSQL to be running, in order to execute its tests. You can either set up PostgreSQL or use the provided `docker-compose.yml` file. Run the tests with:
+Usher requires PostgreSQL to be running to execute its tests. The provided `docker-compose.yml` file makes this easy - just run `docker-compose up -d` before running tests.
+
+**First time setup:**
+```bash
+docker-compose up -d
+mix test.setup
+mix test
+```
+
+**Subsequent test runs:**
 ```bash
 mix test
 ```
@@ -537,6 +624,15 @@ test "user registration with invitation" do
   # ... test your registration flow
 end
 ```
+
+## Contributing
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the development setup above
+4. Run tests (`mix test`)
+5. Commit your changes (`git commit -am 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

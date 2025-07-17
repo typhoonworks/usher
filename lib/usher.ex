@@ -21,11 +21,19 @@ defmodule Usher do
 
       defmodule MyApp.Repo.Migrations.CreateUsherTables do
         use Ecto.Migration
+        import Usher.Migration
 
         def change do
-          Usher.Migration.create_usher_invitations_table()
+          migrate_to_latest()
         end
       end
+
+  For existing installations upgrading to a new version, generate a new migration:
+
+      mix ecto.gen.migration upgrade_usher_tables
+
+  And use the same `migrate_to_latest/0` function - it will automatically detect
+  your current version and apply only the necessary migrations.
 
   ### Configuration
   In your `config/config.exs` (or whichever environment you prefer),
@@ -34,8 +42,9 @@ defmodule Usher do
       config :usher,
         repo: MyApp.Repo,
         token_length: 16,
-        default_expires_in: {7, :days}
-        table_name: "myapp_invitations"
+        default_expires_in: {7, :days},
+        table_name: "myapp_invitations",
+        name_required: false
 
   All the values above have defaults, which you can find in `Usher.Config`.
 
@@ -43,6 +52,9 @@ defmodule Usher do
 
       # Create an invitation
       {:ok, invitation} = Usher.create_invitation()
+
+      # Create an invitation with a name
+      {:ok, invitation} = Usher.create_invitation(%{name: "Team Welcome"})
 
       # Get invitation by token
       invitation = Usher.get_invitation_by_token("abc123")
@@ -54,7 +66,21 @@ defmodule Usher do
           Usher.increment_joined_count(invitation)
         {:error, :invalid_token} ->
           # Handle invalid token
-        {:error, :expired} ->
+        {:error, :invitation_expired} ->
+          # Handle expired token
+      end
+
+      # Validate with name requirement
+      case Usher.validate_invitation_token("abc123", require_name: true) do
+        {:ok, invitation} ->
+          # Proceed with registration (invitation has name)
+          Usher.increment_joined_count(invitation)
+        {:error, :name_required} ->
+          # Handle missing name
+          nil
+        {:error, :invalid_token} ->
+          # Handle invalid token
+        {:error, :invitation_expired} ->
           # Handle expired token
       end
 
@@ -62,6 +88,8 @@ defmodule Usher do
 
   - Token generation using cryptographic functions
   - Configurable token length and expiration periods
+  - Optional name field with configurable validation
+  - Versioned migration system for safe upgrades
   - Framework-agnostic design works with any Ecto-based application
   """
   alias Usher.Config
@@ -73,6 +101,7 @@ defmodule Usher do
 
   ## Options
 
+    * `:name` - Name for the invitation (required if configured)
     * `:expires_at` - Custom expiration datetime (overrides default)
     * `:token` - Custom token (overrides generated token)
 
@@ -81,11 +110,36 @@ defmodule Usher do
       iex> Usher.create_invitation()
       {:ok, %Usher.Invitation{token: "abc123...", expires_at: ~U[...]}}
 
-      iex> Usher.create_invitation(expires_at: ~U[2024-12-31 23:59:59Z])
-      {:ok, %Usher.Invitation{expires_at: ~U[2024-12-31 23:59:59Z]}}
+      iex> Usher.create_invitation(name: "Welcome Team", expires_at: ~U[2024-12-31 23:59:59Z])
+      {:ok, %Usher.Invitation{name: "Welcome Team", expires_at: ~U[2024-12-31 23:59:59Z]}}
   """
   def create_invitation(attrs \\ %{}) do
     CreateInvitation.call(attrs)
+  end
+
+  @doc """
+  Creates a new invitation with a token and default expiration datetime.
+
+  ## Attributes
+
+    * `:name` - Name for the invitation
+    * `:expires_at` - Custom expiration datetime (overrides default)
+    * `:token` - Custom token (overrides generated token)
+
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to false)
+
+  ## Examples
+
+      iex> Usher.create_invitation(%{name: "Welcome Team"})
+      {:ok, %Usher.Invitation{name: "Welcome Team"}}
+
+      iex> Usher.create_invitation(%{}, require_name: true)
+      {:error, %Ecto.Changeset{errors: [name: {"can't be blank", _}]}}
+  """
+  def create_invitation(attrs, opts) do
+    CreateInvitation.call(attrs, opts)
   end
 
   @doc """
@@ -151,12 +205,45 @@ defmodule Usher do
       {:error, :invalid_token}
   """
   def validate_invitation_token(token) do
+    validate_invitation_token(token, [])
+  end
+
+  @doc """
+  Validates an invitation token exists and returns the invitation if valid.
+
+  Returns `{:ok, invitation}` if the token exists and hasn't expired.
+  Returns `{:error, reason}` if the token is invalid, expired, or name validation fails.
+
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to false)
+
+  ## Examples
+
+      iex> Usher.validate_invitation_token("valid_token")
+      {:ok, %Usher.Invitation{}}
+
+      iex> Usher.validate_invitation_token("valid_token", require_name: true)
+      {:error, :name_required}
+
+      iex> Usher.validate_invitation_token("expired_token")
+      {:error, :invitation_expired}
+
+      iex> Usher.validate_invitation_token("invalid_token")
+      {:error, :invalid_token}
+  """
+  def validate_invitation_token(token, opts) do
     case get_invitation_by_token(token) do
       {:ok, invitation} ->
-        if DateTime.compare(invitation.expires_at, DateTime.utc_now()) == :gt do
-          {:ok, invitation}
-        else
-          {:error, :invitation_expired}
+        cond do
+          DateTime.compare(invitation.expires_at, DateTime.utc_now()) != :gt ->
+            {:error, :invitation_expired}
+
+          Keyword.get(opts, :require_name, false) && is_nil(invitation.name) ->
+            {:error, :name_required}
+
+          true ->
+            {:ok, invitation}
         end
 
       {:error, :not_found} ->
@@ -205,6 +292,25 @@ defmodule Usher do
   """
   def change_invitation(%Invitation{} = invitation, attrs \\ %{}) do
     Invitation.changeset(invitation, attrs)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking invitation changes with options.
+
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to false)
+
+  ## Examples
+
+      iex> Usher.change_invitation(invitation, %{name: "Test"})
+      %Ecto.Changeset{data: %Usher.Invitation{}}
+
+      iex> Usher.change_invitation(invitation, %{}, require_name: true)
+      %Ecto.Changeset{data: %Usher.Invitation{}, errors: [name: {"can't be blank", _}]}
+  """
+  def change_invitation(%Invitation{} = invitation, attrs, opts) do
+    Invitation.changeset(invitation, attrs, opts)
   end
 
   @doc """

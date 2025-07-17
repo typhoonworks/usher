@@ -79,6 +79,26 @@ defmodule Usher.Config do
   end
 
   @doc """
+  Returns whether the name field is required for invitations.
+
+  Defaults to false if not configured.
+
+  ## Examples
+
+      # Default
+      iex> Usher.Config.name_required?()
+      false
+
+      # Configured
+      config :usher, name_required: true
+      iex> Usher.Config.name_required?()
+      true
+  """
+  def name_required? do
+    Application.get_env(:usher, :name_required, false)
+  end
+
+  @doc """
   Returns all Usher configuration as a keyword list.
 
   Useful for debugging or displaying current configuration.
@@ -98,7 +118,8 @@ defmodule Usher.Config do
       repo: repo(),
       token_length: token_length(),
       default_expires_in: default_expires_in(),
-      table_name: table_name()
+      table_name: table_name(),
+      name_required: name_required?()
     ]
   end
 end

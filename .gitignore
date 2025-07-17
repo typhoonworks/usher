@@ -70,3 +70,7 @@ Thumbs.db
 
 # Test artifacts
 /test/tmp/
+
+# Tools
+.accomplish.toml
+CLAUDE.md
