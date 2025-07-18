@@ -258,8 +258,10 @@ defmodule UsherTest do
 
       keys = Map.keys(entities)
       assert length(keys) == 2
-      assert get_in(entities, [Access.key!("456"), Access.find(&(&1["action"] == "registered"))])
-      assert get_in(entities, [Access.key!("789"), Access.find(&(&1["action"] == "registered"))])
+
+      assert get_in(entities, [Access.key!("456"), Access.filter(&(&1["action"] == "registered"))])
+
+      assert get_in(entities, [Access.key!("789"), Access.filter(&(&1["action"] == "registered"))])
     end
   end
 
