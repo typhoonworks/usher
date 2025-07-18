@@ -26,12 +26,20 @@ defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV03 do
 end
 ```
 
+Then, update your configuration to include the new `valid_entity_types` and `valid_actions` options:
+```elixir
+config :usher, Usher.Config,
+  valid_entity_types: [:user, :organization],
+  valid_actions: [:visited, :registered]
+```
+
+See the [configuration guide](guides/configuration.md) for more details.
+
 > ⚠️ There was a change in the migration system. The `migrate_to_latest/1` function is deprecated and will be removed in the next major release. Use `migrate_to_version/1` instead.
 
 ### Added
 - **Invitation Usage Tracking System**: Introduced mapping between invitations and entity interactions
-- New schema `Usher.InvitationUsage` for tracking entity interactions with invitations. With this schema,
-  you can now track when an entity uses an invitation, including the entity type, action taken, and timestamp.
+- New schema `Usher.InvitationUsage` for tracking entity interactions with invitations. With this schema, you can now track when an entity uses an invitation, including the entity type, action taken, and timestamp.
 - New query module `Usher.Invitations.InvitationUsageQuery` for building invitation usage queries
 - Database migration `Usher.Migrations.V03` to create the invitation usage table
 - Custom type `Usher.Types.Atom` for handling atoms as strings in database schemas
@@ -48,10 +56,8 @@ end
 
 ### Changed
 - **`Usher.Migration.migrate_to_latest/1` is deprecated; use `Usher.Migration.migrate_to_version/1` instead.** `Usher.Migration.migrate_to_latest/1` will be removed in the next major release. Please check the [installation guide](guides/installation.md) for new migration instructions.
-- Moved V03 migration to separate module for better organization
-- Enhanced migration system to track version state via database comments
-- Updated `Usher.Invitation` schema with new associations to usage tracking
-- Enhanced `Usher.Config` with validation for new entity tracking features
+- Updated `Usher.Invitation` schema with new associations to usage tracking schema.
+- Added new config options to `Usher.Config` for specifying valid entity types and actions that can be tracked with the invitation usage system.
 
 ## [0.2.0] - 2025-07-18
 
