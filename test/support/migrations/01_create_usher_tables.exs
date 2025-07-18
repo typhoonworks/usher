@@ -4,6 +4,6 @@ defmodule Usher.Test.Repo.Migrations.CreateUsherTables do
   import Usher.Migration
 
   def change do
-    create_usher_invitations_table()
+    migrate_to_latest()
   end
 end

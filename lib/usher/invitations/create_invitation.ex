@@ -7,12 +7,12 @@ defmodule Usher.Invitations.CreateInvitation do
 
   @alphanumeric_chars Enum.concat([?a..?z, ?A..?Z, ?0..?9])
 
-  def call(attrs) do
+  def call(attrs, opts \\ []) do
     attrs = Map.put_new_lazy(attrs, :token, &generate_invitation_token/0)
     attrs = Map.put_new_lazy(attrs, :expires_at, &default_expiration/0)
 
     %Invitation{}
-    |> Invitation.changeset(attrs)
+    |> Invitation.changeset(attrs, opts)
     |> Config.repo().insert()
   end
 

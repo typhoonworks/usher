@@ -12,6 +12,7 @@ defmodule Usher.TestFixtures do
     attrs =
       Enum.into(attrs, %{
         token: "test_token_" <> (System.unique_integer([:positive]) |> to_string()),
+        name: "Test Invitation",
         expires_at: DateTime.add(DateTime.utc_now(), 7, :day),
         joined_count: 0
       })
@@ -52,6 +53,18 @@ defmodule Usher.TestFixtures do
     attrs =
       Enum.into(attrs, %{
         joined_count: 1
+      })
+
+    invitation_fixture(attrs)
+  end
+
+  @doc """
+  Generate an invitation without a name.
+  """
+  def invitation_without_name_fixture(attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        name: nil
       })
 
     invitation_fixture(attrs)

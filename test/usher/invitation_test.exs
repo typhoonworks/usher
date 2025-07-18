@@ -7,6 +7,7 @@ defmodule Usher.InvitationTest do
     test "valid changeset with required fields" do
       changeset =
         Invitation.changeset(%Invitation{}, %{
+          name: "Test Invitation",
           token: "valid_token",
           expires_at: DateTime.add(DateTime.utc_now(), 1, :day)
         })

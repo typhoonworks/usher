@@ -79,6 +79,57 @@ defmodule Usher.Config do
   end
 
   @doc """
+  Returns validation configuration for all schemas.
+
+  Defaults to %{invitation: %{name_required: true}} if not configured.
+
+  ## Examples
+
+      # Default
+      iex> Usher.Config.validations()
+      %{invitation: %{name_required: true}}
+
+      # Configured
+      config :usher, validations: %{
+        invitation: %{name_required: false}
+      }
+      iex> Usher.Config.validations()
+      %{invitation: %{name_required: false}}
+  """
+  def validations do
+    default_validations = %{
+      invitation: %{name_required: true}
+    }
+
+    Application.get_env(:usher, :validations, default_validations)
+  end
+
+  @doc """
+  Returns whether the name field is required for invitations.
+
+  This is a convenience function that extracts the name_required value
+  from the validations configuration.
+
+  ## Examples
+
+      # Default
+      iex> Usher.Config.name_required?()
+      true
+
+      # Configured via validations
+      config :usher, validations: %{
+        invitation: %{name_required: false}
+      }
+      iex> Usher.Config.name_required?()
+      false
+  """
+  def name_required? do
+    validations()
+    |> get_in([:invitation, :name_required])
+    |> Kernel.||(true)
+  end
+
+  @doc """
   Returns all Usher configuration as a keyword list.
 
   Useful for debugging or displaying current configuration.
@@ -98,7 +149,8 @@ defmodule Usher.Config do
       repo: repo(),
       token_length: token_length(),
       default_expires_in: default_expires_in(),
-      table_name: table_name()
+      table_name: table_name(),
+      validations: validations()
     ]
   end
 end

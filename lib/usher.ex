@@ -21,11 +21,19 @@ defmodule Usher do
 
       defmodule MyApp.Repo.Migrations.CreateUsherTables do
         use Ecto.Migration
+        import Usher.Migration
 
         def change do
-          Usher.Migration.create_usher_invitations_table()
+          migrate_to_latest()
         end
       end
+
+  For existing installations upgrading to a new version, generate a new migration:
+
+      mix ecto.gen.migration upgrade_usher_tables
+
+  And use the same `migrate_to_latest/0` function - it will automatically detect
+  your current version and apply only the necessary migrations.
 
   ### Configuration
   In your `config/config.exs` (or whichever environment you prefer),
@@ -34,8 +42,13 @@ defmodule Usher do
       config :usher,
         repo: MyApp.Repo,
         token_length: 16,
-        default_expires_in: {7, :days}
-        table_name: "myapp_invitations"
+        default_expires_in: {7, :days},
+        table_name: "myapp_invitations",
+        validations: %{
+          invitation: %{
+            name_required: false
+          }
+        }
 
   All the values above have defaults, which you can find in `Usher.Config`.
 
@@ -43,6 +56,9 @@ defmodule Usher do
 
       # Create an invitation
       {:ok, invitation} = Usher.create_invitation()
+
+      # Create an invitation with a name
+      {:ok, invitation} = Usher.create_invitation(%{name: "Team Welcome"})
 
       # Get invitation by token
       invitation = Usher.get_invitation_by_token("abc123")
@@ -54,14 +70,17 @@ defmodule Usher do
           Usher.increment_joined_count(invitation)
         {:error, :invalid_token} ->
           # Handle invalid token
-        {:error, :expired} ->
+        {:error, :invitation_expired} ->
           # Handle expired token
       end
+
 
   ## Features
 
   - Token generation using cryptographic functions
   - Configurable token length and expiration periods
+  - Optional name field with configurable validation
+  - Versioned migration system for safe upgrades
   - Framework-agnostic design works with any Ecto-based application
   """
   alias Usher.Config
@@ -71,21 +90,29 @@ defmodule Usher do
   @doc """
   Creates a new invitation with a token and default expiration datetime.
 
-  ## Options
+  ## Attributes
 
+    * `:name` - Name for the invitation
     * `:expires_at` - Custom expiration datetime (overrides default)
     * `:token` - Custom token (overrides generated token)
+
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to false)
 
   ## Examples
 
       iex> Usher.create_invitation()
       {:ok, %Usher.Invitation{token: "abc123...", expires_at: ~U[...]}}
 
-      iex> Usher.create_invitation(expires_at: ~U[2024-12-31 23:59:59Z])
-      {:ok, %Usher.Invitation{expires_at: ~U[2024-12-31 23:59:59Z]}}
+      iex> Usher.create_invitation(%{name: "Welcome Team"})
+      {:ok, %Usher.Invitation{name: "Welcome Team"}}
+
+      iex> Usher.create_invitation(%{}, require_name: true)
+      {:error, %Ecto.Changeset{errors: [name: {"can't be blank", _}]}}
   """
-  def create_invitation(attrs \\ %{}) do
-    CreateInvitation.call(attrs)
+  def create_invitation(attrs \\ %{}, opts \\ []) do
+    CreateInvitation.call(attrs, opts)
   end
 
   @doc """
@@ -198,13 +225,23 @@ defmodule Usher do
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking invitation changes.
 
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to false)
+
   ## Examples
 
       iex> Usher.change_invitation(invitation)
       %Ecto.Changeset{data: %Usher.Invitation{}}
+
+      iex> Usher.change_invitation(invitation, %{name: "Test"})
+      %Ecto.Changeset{data: %Usher.Invitation{}}
+
+      iex> Usher.change_invitation(invitation, %{}, require_name: true)
+      %Ecto.Changeset{data: %Usher.Invitation{}, errors: [name: {"can't be blank", _}]}
   """
-  def change_invitation(%Invitation{} = invitation, attrs \\ %{}) do
-    Invitation.changeset(invitation, attrs)
+  def change_invitation(%Invitation{} = invitation, attrs \\ %{}, opts \\ []) do
+    Invitation.changeset(invitation, attrs, opts)
   end
 
   @doc """
