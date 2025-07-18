@@ -40,9 +40,12 @@ defmodule Usher.MixProject do
     [
       {:ecto, "~> 3.13"},
       {:ecto_sql, "~> 3.13"},
+      {:jason, "~> 1.4"},
       {:postgrex, "~> 0.20", optional: true},
-      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+
+      # Development and testing dependencies
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -59,12 +62,27 @@ defmodule Usher.MixProject do
     [
       main: "readme",
       source_ref: "v#{@version}",
-      extras: ["README.md"],
+      extras: docs_guides(),
       groups_for_modules: [
         Core: [Usher, Usher.Config],
         Schema: [Usher.Invitation],
         Integrations: [Usher.Phoenix]
       ]
+    ]
+  end
+
+  defp docs_guides do
+    [
+      "README.md",
+      "guides/overview.md",
+      "guides/installation.md",
+      "guides/getting-started.md",
+      "guides/advanced-usage.md",
+      "guides/invitation-usage-tracking.md",
+      "guides/phoenix-integration.md",
+      "guides/configuration.md",
+      "guides/testing.md",
+      "guides/contributing.md"
     ]
   end
 

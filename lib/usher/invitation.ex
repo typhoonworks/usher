@@ -15,6 +15,7 @@ defmodule Usher.Invitation do
           name: String.t() | nil,
           expires_at: DateTime.t(),
           joined_count: integer(),
+          usages: [Usher.InvitationUsage.t()] | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -27,6 +28,8 @@ defmodule Usher.Invitation do
     field(:name, :string)
     field(:expires_at, :utc_datetime)
     field(:joined_count, :integer, default: 0)
+
+    has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
     timestamps(type: :utc_datetime_usec)
   end

@@ -50,7 +50,7 @@ defmodule UsherTest do
       assert {:error, :invalid_token} = Usher.validate_invitation_token("nonexistent")
     end
 
-    test "returns {:error, :expired} for expired token" do
+    test "returns {:error, :invitation_expired} for expired token" do
       invitation = expired_invitation_fixture()
 
       assert {:error, :invitation_expired} = Usher.validate_invitation_token(invitation.token)
@@ -69,6 +69,225 @@ defmodule UsherTest do
     test "builds URL with invitation token" do
       url = Usher.invitation_url("abc123", "https://example.com/signup")
       assert url == "https://example.com/signup?invitation_token=abc123"
+    end
+  end
+
+  describe "track_invitation_usage/5" do
+    test "tracks usage with invitation struct" do
+      invitation = invitation_fixture()
+
+      assert {:ok, usage} =
+               Usher.track_invitation_usage(
+                 invitation,
+                 :user,
+                 "123",
+                 :registered,
+                 %{plan: "premium"}
+               )
+
+      assert usage.invitation_id == invitation.id
+      assert usage.entity_type == :user
+      assert usage.entity_id == "123"
+      assert usage.action == :registered
+      assert usage.metadata == %{plan: "premium"}
+    end
+
+    test "tracks usage with invitation token" do
+      invitation = invitation_fixture()
+
+      assert {:ok, usage} =
+               Usher.track_invitation_usage(
+                 invitation.token,
+                 :company,
+                 "456",
+                 :visited
+               )
+
+      assert usage.invitation_id == invitation.id
+      assert usage.entity_type == :company
+      assert usage.entity_id == "456"
+      assert usage.action == :visited
+      assert usage.metadata == %{}
+    end
+
+    test "fails with invalid invitation token" do
+      assert {:error, :invitation_not_found} =
+               Usher.track_invitation_usage(
+                 "invalid_token",
+                 :user,
+                 "123",
+                 :registered
+               )
+    end
+
+    test "allows same entity to perform different actions" do
+      invitation = invitation_fixture()
+
+      assert {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      assert {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :registered)
+    end
+  end
+
+  describe "list_invitation_usages/2" do
+    test "lists all usages for an invitation" do
+      invitation = invitation_fixture()
+
+      {:ok, usage1} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, usage2} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+
+      usages = Usher.list_invitation_usages(invitation)
+
+      assert length(usages) == 2
+      # More recent first
+      assert usage2 in usages
+      assert usage1 in usages
+    end
+
+    test "filters by entity_type" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, usage2} = Usher.track_invitation_usage(invitation, :company, "456", :registered)
+
+      usages = Usher.list_invitation_usages(invitation, entity_type: "company")
+
+      assert length(usages) == 1
+      assert usage2 in usages
+    end
+
+    test "filters by entity_id" do
+      invitation = invitation_fixture()
+
+      {:ok, usage1} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+
+      usages = Usher.list_invitation_usages(invitation, entity_id: "123")
+
+      assert length(usages) == 1
+      assert usage1 in usages
+    end
+
+    test "filters by action" do
+      invitation = invitation_fixture()
+
+      {:ok, usage1} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+
+      usages = Usher.list_invitation_usages(invitation, action: "visited")
+
+      assert length(usages) == 1
+      assert usage1 in usages
+    end
+
+    test "limits results" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "1", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "2", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "3", :visited)
+
+      usages = Usher.list_invitation_usages(invitation, limit: 2)
+
+      assert length(usages) == 2
+    end
+  end
+
+  describe "list_invitation_usages_by_unique_entity/2" do
+    test "returns unique entities" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :registered)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :company, "456", :registered)
+
+      entities =
+        invitation
+        |> Usher.list_invitation_usages_by_unique_entity()
+        |> Enum.into(%{})
+
+      keys = Map.keys(entities)
+      assert length(keys) == 2
+      assert "123" in keys
+      assert "456" in keys
+    end
+
+    test "filters by entity_type" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :company, "789", :registered)
+
+      entities =
+        invitation
+        |> Usher.list_invitation_usages_by_unique_entity(entity_type: :company)
+        |> Enum.into(%{})
+
+      keys = Map.keys(entities)
+      assert length(keys) == 1
+      assert "789" in keys
+    end
+
+    test "filters by entity_id" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+
+      entities =
+        invitation
+        |> Usher.list_invitation_usages_by_unique_entity(entity_id: "123")
+        |> Enum.into(%{})
+
+      keys = Map.keys(entities)
+      assert length(keys) == 1
+      assert "123" in keys
+    end
+
+    test "filters by action" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "456", :registered)
+      {:ok, _} = Usher.track_invitation_usage(invitation, :company, "789", :registered)
+
+      entities =
+        invitation
+        |> Usher.list_invitation_usages_by_unique_entity(action: "registered")
+        |> Enum.into(%{})
+
+      keys = Map.keys(entities)
+      assert length(keys) == 2
+      assert get_in(entities, [Access.key!("456"), Access.find(&(&1["action"] == "registered"))])
+      assert get_in(entities, [Access.key!("789"), Access.find(&(&1["action"] == "registered"))])
+    end
+  end
+
+  describe "entity_used_invitation?/4" do
+    test "returns true when entity used invitation" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :registered)
+
+      assert Usher.entity_used_invitation?(invitation, "user", "123")
+      assert Usher.entity_used_invitation?(invitation, "user", "123", "registered")
+    end
+
+    test "returns false when entity did not use invitation" do
+      invitation = invitation_fixture()
+
+      refute Usher.entity_used_invitation?(invitation, "user", "123")
+      refute Usher.entity_used_invitation?(invitation, "user", "123", "registered")
+    end
+
+    test "returns false when entity used invitation for different action" do
+      invitation = invitation_fixture()
+
+      {:ok, _} = Usher.track_invitation_usage(invitation, :user, "123", :visited)
+
+      assert Usher.entity_used_invitation?(invitation, "user", "123")
+      assert Usher.entity_used_invitation?(invitation, "user", "123", "visited")
+      refute Usher.entity_used_invitation?(invitation, "user", "123", "registered")
     end
   end
 end

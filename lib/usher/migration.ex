@@ -94,6 +94,89 @@ defmodule Usher.Migration do
     end
   end
 
+  @doc """
+  Creates the usher_invitation_usages table for tracking entity usage of invitations.
+
+  ## Usage
+
+  In your migration file:
+
+      defmodule MyApp.Repo.Migrations.CreateUsherInvitationUsages do
+        use Ecto.Migration
+        import Usher.Migration
+
+        def change do
+          create_usher_invitation_usages_table()
+        end
+      end
+
+  ## Options
+
+    * `:table_name` - Custom table name (defaults to "usher_invitation_usages")
+    * `:invitations_table_name` - Custom invitations table name (defaults to configured table name)
+    * `:prefix` - Schema prefix for the table
+
+  ## Examples
+
+      # Default table name
+      create_usher_invitation_usages_table()
+
+      # Custom table name
+      create_usher_invitation_usages_table(table_name: "my_invitation_usages")
+
+      # With schema prefix
+      create_usher_invitation_usages_table(prefix: "usher")
+  """
+  def create_usher_invitation_usages_table(opts \\ []) do
+    table_name = Keyword.get(opts, :table_name, "usher_invitation_usages")
+    invitations_table_name = Keyword.get(opts, :invitations_table_name, Config.table_name())
+    table_opts = Keyword.take(opts, [:prefix])
+
+    create table(table_name, [primary_key: false] ++ table_opts) do
+      add(:id, :uuid, primary_key: true)
+
+      add(:invitation_id, references(invitations_table_name, type: :uuid, on_delete: :delete_all),
+        null: false
+      )
+
+      add(:entity_type, :string, null: false)
+      add(:entity_id, :string, null: false)
+      add(:action, :string, null: false)
+      add(:metadata, :map, default: %{}, null: false)
+
+      timestamps(type: :utc_datetime_usec)
+    end
+
+    create(index(table_name, [:invitation_id]))
+    create(index(table_name, [:entity_type, :entity_id]))
+    create(index(table_name, [:action]))
+    create(index(table_name, [:inserted_at]))
+  end
+
+  @doc """
+  Drops the usher_invitation_usages table.
+
+  ## Usage
+
+      drop_usher_invitation_usages_table()
+
+  ## Options
+
+    * `:table_name` - Custom table name (defaults to "usher_invitation_usages")
+
+  ## Examples
+
+      # Default table name
+      drop_usher_invitation_usages_table()
+
+      # Custom table name
+      drop_usher_invitation_usages_table(table_name: "my_invitation_usages")
+  """
+  def drop_usher_invitation_usages_table(opts \\ []) do
+    table_name = Keyword.get(opts, :table_name, "usher_invitation_usages")
+    drop(table(table_name))
+  end
+
   defp check_legacy_table(table_name, opts) do
     # Check if table exists but has no version comment (legacy installation)
     prefix = Keyword.get(opts, :prefix, "public")
