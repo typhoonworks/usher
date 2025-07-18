@@ -1,6 +1,9 @@
 defmodule Usher.Invitations.InvitationUsageQuery do
   @moduledoc """
   Query builder for invitation usage records.
+
+  You can use this module to construct queries for fetching invitation usage data,
+  if the provided functions in the `Usher` module do not meet your needs.
   """
   import Ecto.Query, warn: false
 

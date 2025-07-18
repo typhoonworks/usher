@@ -299,11 +299,22 @@ defmodule Usher do
   ## Examples
 
       # All unique entities that used the invitation
-      entities = Usher.get_invitation_unique_entities(invitation)
-      # => [{"user", "123"}, {"company", "456"}]
+      unique_entities = Usher.list_invitation_usages_by_unique_entity(invitation)
 
-      # Unique entities that registered
-      entities = Usher.get_invitation_unique_entities(invitation, action: "registered")
+      # All entities of a specific type that used the invitation
+      unique_users = Usher.list_invitation_usages_by_unique_entity(invitation, entity_type: :user)
+
+      # All entities that took a specific action with the invitation
+      unique_registrations = Usher.list_invitation_usages_by_unique_entity(
+        invitation,
+        action: :registered
+      )
+
+      # A specific entity and the actions they took with the invitation
+      unique_entity_actions = Usher.list_invitation_usages_by_unique_entity(
+        invitation,
+        entity_id: "123"
+      )
   """
   @spec list_invitation_usages_by_unique_entity(Invitation.t(), keyword()) :: [
           {String.t(), [invitation_usages_by_unique_entity()]}
