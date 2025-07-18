@@ -2,90 +2,15 @@ defmodule Usher do
   @moduledoc """
   Usher is a web framework-agnostic invitation link management library for
   any Elixir application with Ecto.
-
-  ## Getting Started
-
-  To use Usher in your application, you need to:
-
-  1. Run the migrations
-  2. Configure Usher with your repo
-  3. Use the functions provided to manage invitations
-
-  ### Database Setup
-
-  Generate and run the migration:
-
-      mix ecto.gen.migration create_usher_tables
-
-  Then add the Usher schema to your migration:
-
-      defmodule MyApp.Repo.Migrations.CreateUsherTables do
-        use Ecto.Migration
-        import Usher.Migration
-
-        def change do
-          migrate_to_latest()
-        end
-      end
-
-  For existing installations upgrading to a new version, generate a new migration:
-
-      mix ecto.gen.migration upgrade_usher_tables
-
-  And use the same `migrate_to_latest/0` function - it will automatically detect
-  your current version and apply only the necessary migrations.
-
-  ### Configuration
-  In your `config/config.exs` (or whichever environment you prefer),
-  set up the Usher configuration:
-
-      config :usher,
-        repo: MyApp.Repo,
-        token_length: 16,
-        default_expires_in: {7, :days},
-        table_name: "myapp_invitations",
-        validations: %{
-          invitation: %{
-            name_required: false
-          }
-        }
-
-  All the values above have defaults, which you can find in `Usher.Config`.
-
-  ### Basic Usage
-
-      # Create an invitation
-      {:ok, invitation} = Usher.create_invitation()
-
-      # Create an invitation with a name
-      {:ok, invitation} = Usher.create_invitation(%{name: "Team Welcome"})
-
-      # Get invitation by token
-      invitation = Usher.get_invitation_by_token("abc123")
-
-      # Validate and consume invitation
-      case Usher.validate_invitation_token("abc123") do
-        {:ok, invitation} ->
-          # Proceed with registration
-          Usher.increment_joined_count(invitation)
-        {:error, :invalid_token} ->
-          # Handle invalid token
-        {:error, :invitation_expired} ->
-          # Handle expired token
-      end
-
-
-  ## Features
-
-  - Token generation using cryptographic functions
-  - Configurable token length and expiration periods
-  - Optional name field with configurable validation
-  - Versioned migration system for safe upgrades
-  - Framework-agnostic design works with any Ecto-based application
   """
   alias Usher.Config
   alias Usher.Invitation
+  alias Usher.InvitationUsage
   alias Usher.Invitations.CreateInvitation
+  alias Usher.Invitations.InvitationUsageQuery
+
+  @type entity_id :: String.t()
+  @type invitation_usages_by_unique_entity :: list({entity_id(), map()})
 
   @doc """
   Creates a new invitation with a token and default expiration datetime.
@@ -257,5 +182,167 @@ defmodule Usher do
     query = URI.encode_query([{"invitation_token", token}])
 
     %{uri | query: query} |> URI.to_string()
+  end
+
+  # Entity Usage Tracking
+
+  @doc """
+  Records an entity's usage of an invitation.
+
+  This provides flexible tracking of how invitations are used. You can track
+  different actions (like :visited, :registered, :activated) and different
+  entity types (like :user, :company, :device).
+
+  ## Parameters
+
+    * `invitation_or_token` - An `%Invitation{}` struct or invitation token string
+    * `entity_type` - String describing the type of entity (e.g., :user, :company, :device)
+    * `entity_id` - String ID of the entity
+    * `action` - String describing the action (e.g., :visited, :registered, :activated)
+    * `metadata` - Optional map of additional data (e.g., user agent, IP, custom fields)
+
+  ## Examples
+
+      # Track a user visiting signup page
+      {:ok, usage} = Usher.track_invitation_usage(
+        "abc123",
+        :user,
+        "user_123",
+        :visited,
+        %{ip: "192.168.1.1", user_agent: "Mozilla/5.0..."}
+      )
+
+      # Track a company registration
+      {:ok, usage} = Usher.track_invitation_usage(
+        invitation,
+        :company,
+        "company_456",
+        :registered,
+        %{plan: "premium", source: "email_campaign"}
+      )
+
+      # Tracking without metadata
+      {:ok, usage} = Usher.track_invitation_usage("abc123", :user, "789", :activated)
+  """
+  @spec track_invitation_usage(
+          Invitation.t() | String.t(),
+          atom(),
+          String.t(),
+          atom(),
+          map()
+        ) ::
+          {:ok, InvitationUsage.t()}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :invitation_not_found}
+  def track_invitation_usage(invitation_or_token, entity_type, entity_id, action, metadata \\ %{})
+
+  def track_invitation_usage(%Invitation{} = invitation, entity_type, entity_id, action, metadata) do
+    attrs = %{
+      invitation_id: invitation.id,
+      entity_type: entity_type,
+      entity_id: entity_id,
+      action: action,
+      metadata: metadata
+    }
+
+    %InvitationUsage{}
+    |> InvitationUsage.changeset(attrs)
+    |> Config.repo().insert()
+  end
+
+  def track_invitation_usage(token, entity_type, entity_id, action, metadata)
+      when is_binary(token) do
+    case get_invitation_by_token(token) do
+      {:ok, invitation} ->
+        track_invitation_usage(invitation, entity_type, entity_id, action, metadata)
+
+      {:error, :not_found} ->
+        {:error, :invitation_not_found}
+    end
+  end
+
+  @doc """
+  Gets all usage records for an invitation.
+
+  ## Options
+
+    * `:entity_type` - Filter by entity type
+    * `:entity_id` - Filter by entity ID
+    * `:action` - Filter by action
+    * `:limit` - Limit number of results
+
+  ## Examples
+
+      # Get all usages for an invitation
+      usages = Usher.list_invitation_usages(invitation)
+
+      # Get only user registrations
+      usages = Usher.list_invitation_usages(invitation, entity_type: :user, action: :registered)
+  """
+  @spec list_invitation_usages(Invitation.t(), keyword()) :: [InvitationUsage.t()]
+  def list_invitation_usages(%Invitation{} = invitation, opts \\ []) do
+    invitation
+    |> InvitationUsageQuery.list_query(opts)
+    |> Config.repo().all()
+  end
+
+  @doc """
+  Gets all usage records for an invitiation, grouped by unique entity IDs.
+
+  ## Options
+
+    * `:entity_type` - Filter by entity type, useful for getting unique usages of a specific entity type
+    * `:entity_id` - Filter by entity ID, useful for getting unique usages of a specific entity
+    * `:action` - Filter by action, useful for getting unique usages of a specific action
+    * `:limit` - Limit number of results
+
+  ## Examples
+
+      # All unique entities that used the invitation
+      unique_entities = Usher.list_invitation_usages_by_unique_entity(invitation)
+
+      # All entities of a specific type that used the invitation
+      unique_users = Usher.list_invitation_usages_by_unique_entity(invitation, entity_type: :user)
+
+      # All entities that took a specific action with the invitation
+      unique_registrations = Usher.list_invitation_usages_by_unique_entity(
+        invitation,
+        action: :registered
+      )
+
+      # A specific entity and the actions they took with the invitation
+      unique_entity_actions = Usher.list_invitation_usages_by_unique_entity(
+        invitation,
+        entity_id: "123"
+      )
+  """
+  @spec list_invitation_usages_by_unique_entity(Invitation.t(), keyword()) :: [
+          {String.t(), [invitation_usages_by_unique_entity()]}
+        ]
+  def list_invitation_usages_by_unique_entity(%Invitation{} = invitation, opts \\ []) do
+    invitation
+    |> InvitationUsageQuery.unique_entities_query(opts)
+    |> Config.repo().all()
+  end
+
+  @doc """
+  Checks if a specific entity has performed an action on an invitation.
+
+  ## Examples
+
+      # Check if user 123 has registered
+      if Usher.entity_used_invitation?(invitation, "user", "123", "registered") do
+        # Entity has already registered
+      end
+
+      # Check if entity has any usage
+      if Usher.entity_used_invitation?(invitation, "user", "123") do
+        # Entity has used this invitation for any action
+      end
+  """
+  def entity_used_invitation?(%Invitation{} = invitation, entity_type, entity_id, action \\ nil) do
+    invitation
+    |> InvitationUsageQuery.entity_exists_query(entity_type, entity_id, action)
+    |> Config.repo().one()
   end
 end

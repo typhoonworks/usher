@@ -5,8 +5,8 @@ defmodule Usher.MigrationTest do
 
   describe "get_migration_path/2" do
     test "returns correct path for fresh installation" do
-      path = Migration.get_migration_path(nil, "v02")
-      assert path == ["v01", "v02"]
+      path = Migration.get_migration_path(nil, Migration.latest_version())
+      assert path == Migration.all_versions()
     end
 
     test "returns correct path for legacy installation" do

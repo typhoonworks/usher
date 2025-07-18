@@ -130,6 +130,86 @@ defmodule Usher.Config do
   end
 
   @doc """
+  Returns the configured valid entity types for invitation usage tracking.
+
+  This is required for usage tracking to function and must be set in your application config:
+
+      config :usher, valid_entity_types: [:user, :company, :device]
+
+  Raises if not configured.
+  """
+  def valid_entity_types do
+    case Application.get_env(:usher, :valid_entity_types) do
+      nil ->
+        raise """
+        No valid_entity_types configured for Usher.
+
+        Configure valid entity types in your application config:
+
+            config :usher, valid_entity_types: [:user, :company, :device]
+        """
+
+      types when is_list(types) ->
+        if Enum.all?(types, &is_atom/1) do
+          types
+        else
+          raise """
+          Invalid valid_entity_types configuration for Usher: #{inspect(types)}
+
+          Expected a list of atoms, got: #{inspect(types)}
+          """
+        end
+
+      invalid ->
+        raise """
+        Invalid valid_entity_types configuration for Usher: #{inspect(invalid)}
+
+        Expected a list of atoms, got: #{inspect(invalid)}
+        """
+    end
+  end
+
+  @doc """
+  Returns the configured valid actions for invitation usage tracking.
+
+  This is required for usage tracking to function and must be set in your application config:
+
+      config :usher, valid_actions: [:visited, :registered, :activated]
+
+  Raises if not configured.
+  """
+  def valid_actions do
+    case Application.get_env(:usher, :valid_actions) do
+      nil ->
+        raise """
+        No valid_actions configured for Usher.
+
+        Configure valid actions in your application config:
+
+            config :usher, valid_actions: [:visited, :registered, :activated]
+        """
+
+      actions when is_list(actions) ->
+        if Enum.all?(actions, &is_atom/1) do
+          actions
+        else
+          raise """
+          Invalid valid_actions configuration for Usher: #{inspect(actions)}
+
+          Expected a list of atoms, got: #{inspect(actions)}
+          """
+        end
+
+      invalid ->
+        raise """
+        Invalid valid_actions configuration for Usher: #{inspect(invalid)}
+
+        Expected a list of atoms, got: #{inspect(invalid)}
+        """
+    end
+  end
+
+  @doc """
   Returns all Usher configuration as a keyword list.
 
   Useful for debugging or displaying current configuration.
@@ -141,7 +221,10 @@ defmodule Usher.Config do
         repo: MyApp.Repo,
         token_length: 16,
         default_expires_in: {7, :day},
-        table_name: "usher_invitations"
+        table_name: "usher_invitations",
+        validations: %{invitation: %{name_required: true}},
+        valid_entity_types: [:user, :company],
+        valid_actions: [:visited, :registered]
       ]
   """
   def all do
@@ -150,7 +233,9 @@ defmodule Usher.Config do
       token_length: token_length(),
       default_expires_in: default_expires_in(),
       table_name: table_name(),
-      validations: validations()
+      validations: validations(),
+      valid_entity_types: valid_entity_types(),
+      valid_actions: valid_actions()
     ]
   end
 end
