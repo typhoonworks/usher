@@ -44,7 +44,11 @@ defmodule Usher do
         token_length: 16,
         default_expires_in: {7, :days},
         table_name: "myapp_invitations",
-        name_required: false
+        validations: %{
+          invitation: %{
+            name_required: false
+          }
+        }
 
   All the values above have defaults, which you can find in `Usher.Config`.
 
@@ -70,19 +74,6 @@ defmodule Usher do
           # Handle expired token
       end
 
-      # Validate with name requirement
-      case Usher.validate_invitation_token("abc123", require_name: true) do
-        {:ok, invitation} ->
-          # Proceed with registration (invitation has name)
-          Usher.increment_joined_count(invitation)
-        {:error, :name_required} ->
-          # Handle missing name
-          nil
-        {:error, :invalid_token} ->
-          # Handle invalid token
-        {:error, :invitation_expired} ->
-          # Handle expired token
-      end
 
   ## Features
 
@@ -99,27 +90,6 @@ defmodule Usher do
   @doc """
   Creates a new invitation with a token and default expiration datetime.
 
-  ## Options
-
-    * `:name` - Name for the invitation (required if configured)
-    * `:expires_at` - Custom expiration datetime (overrides default)
-    * `:token` - Custom token (overrides generated token)
-
-  ## Examples
-
-      iex> Usher.create_invitation()
-      {:ok, %Usher.Invitation{token: "abc123...", expires_at: ~U[...]}}
-
-      iex> Usher.create_invitation(name: "Welcome Team", expires_at: ~U[2024-12-31 23:59:59Z])
-      {:ok, %Usher.Invitation{name: "Welcome Team", expires_at: ~U[2024-12-31 23:59:59Z]}}
-  """
-  def create_invitation(attrs \\ %{}) do
-    CreateInvitation.call(attrs)
-  end
-
-  @doc """
-  Creates a new invitation with a token and default expiration datetime.
-
   ## Attributes
 
     * `:name` - Name for the invitation
@@ -132,13 +102,16 @@ defmodule Usher do
 
   ## Examples
 
+      iex> Usher.create_invitation()
+      {:ok, %Usher.Invitation{token: "abc123...", expires_at: ~U[...]}}
+
       iex> Usher.create_invitation(%{name: "Welcome Team"})
       {:ok, %Usher.Invitation{name: "Welcome Team"}}
 
       iex> Usher.create_invitation(%{}, require_name: true)
       {:error, %Ecto.Changeset{errors: [name: {"can't be blank", _}]}}
   """
-  def create_invitation(attrs, opts) do
+  def create_invitation(attrs \\ %{}, opts \\ []) do
     CreateInvitation.call(attrs, opts)
   end
 
@@ -205,45 +178,12 @@ defmodule Usher do
       {:error, :invalid_token}
   """
   def validate_invitation_token(token) do
-    validate_invitation_token(token, [])
-  end
-
-  @doc """
-  Validates an invitation token exists and returns the invitation if valid.
-
-  Returns `{:ok, invitation}` if the token exists and hasn't expired.
-  Returns `{:error, reason}` if the token is invalid, expired, or name validation fails.
-
-  ## Options
-
-    * `:require_name` - Whether to require the name field (defaults to false)
-
-  ## Examples
-
-      iex> Usher.validate_invitation_token("valid_token")
-      {:ok, %Usher.Invitation{}}
-
-      iex> Usher.validate_invitation_token("valid_token", require_name: true)
-      {:error, :name_required}
-
-      iex> Usher.validate_invitation_token("expired_token")
-      {:error, :invitation_expired}
-
-      iex> Usher.validate_invitation_token("invalid_token")
-      {:error, :invalid_token}
-  """
-  def validate_invitation_token(token, opts) do
     case get_invitation_by_token(token) do
       {:ok, invitation} ->
-        cond do
-          DateTime.compare(invitation.expires_at, DateTime.utc_now()) != :gt ->
-            {:error, :invitation_expired}
-
-          Keyword.get(opts, :require_name, false) && is_nil(invitation.name) ->
-            {:error, :name_required}
-
-          true ->
-            {:ok, invitation}
+        if DateTime.compare(invitation.expires_at, DateTime.utc_now()) == :gt do
+          {:ok, invitation}
+        else
+          {:error, :invitation_expired}
         end
 
       {:error, :not_found} ->
@@ -285,23 +225,14 @@ defmodule Usher do
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking invitation changes.
 
-  ## Examples
-
-      iex> Usher.change_invitation(invitation)
-      %Ecto.Changeset{data: %Usher.Invitation{}}
-  """
-  def change_invitation(%Invitation{} = invitation, attrs \\ %{}) do
-    Invitation.changeset(invitation, attrs)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking invitation changes with options.
-
   ## Options
 
     * `:require_name` - Whether to require the name field (defaults to false)
 
   ## Examples
+
+      iex> Usher.change_invitation(invitation)
+      %Ecto.Changeset{data: %Usher.Invitation{}}
 
       iex> Usher.change_invitation(invitation, %{name: "Test"})
       %Ecto.Changeset{data: %Usher.Invitation{}}
@@ -309,7 +240,7 @@ defmodule Usher do
       iex> Usher.change_invitation(invitation, %{}, require_name: true)
       %Ecto.Changeset{data: %Usher.Invitation{}, errors: [name: {"can't be blank", _}]}
   """
-  def change_invitation(%Invitation{} = invitation, attrs, opts) do
+  def change_invitation(%Invitation{} = invitation, attrs \\ %{}, opts \\ []) do
     Invitation.changeset(invitation, attrs, opts)
   end
 

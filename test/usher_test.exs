@@ -3,9 +3,10 @@ defmodule UsherTest do
 
   describe "create_invitation/1" do
     test "creates invitation with default values" do
-      assert {:ok, invitation} = Usher.create_invitation()
+      assert {:ok, invitation} = Usher.create_invitation(%{name: "Test Invitation"})
 
       assert invitation.token
+      assert invitation.name == "Test Invitation"
       assert invitation.expires_at
       assert invitation.joined_count == 0
       # Configured in `config.exs`
@@ -20,6 +21,7 @@ defmodule UsherTest do
 
       assert {:ok, invitation} =
                Usher.create_invitation(%{
+                 name: "Custom Invitation",
                  token: "custom_token",
                  expires_at: expires_at
                })
@@ -31,8 +33,8 @@ defmodule UsherTest do
     test "fails with duplicate token" do
       token = "duplicate_token"
 
-      assert {:ok, _} = Usher.create_invitation(%{token: token})
-      assert {:error, changeset} = Usher.create_invitation(%{token: token})
+      assert {:ok, _} = Usher.create_invitation(%{name: "First", token: token})
+      assert {:error, changeset} = Usher.create_invitation(%{name: "Second", token: token})
       assert "has already been taken" in errors_on(changeset).token
     end
   end

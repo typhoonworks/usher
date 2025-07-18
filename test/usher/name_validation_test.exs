@@ -4,13 +4,24 @@ defmodule Usher.NameValidationTest do
   alias Usher.Invitation
 
   describe "changeset with name validation" do
-    test "allows invitation without name when not required" do
+    test "requires name by default" do
       attrs = %{
         token: "test_token_123",
         expires_at: DateTime.add(DateTime.utc_now(), 7, :day)
       }
 
       changeset = Invitation.changeset(%Invitation{}, attrs)
+      refute changeset.valid?
+      assert {"can't be blank", _} = changeset.errors[:name]
+    end
+
+    test "allows invitation without name when not required" do
+      attrs = %{
+        token: "test_token_123",
+        expires_at: DateTime.add(DateTime.utc_now(), 7, :day)
+      }
+
+      changeset = Invitation.changeset(%Invitation{}, attrs, require_name: false)
       assert changeset.valid?
     end
 

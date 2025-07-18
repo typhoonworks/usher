@@ -12,21 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Optional name field for invitations with configurable validation
 - Versioned migration system for safe database schema upgrades
-- Per-function validation options for name requirements
-- `validate_invitation_token/2` with optional name validation
-- `create_invitation/2` with optional name validation
-- `change_invitation/3` with optional name validation
-- New configuration option `:name_required` (defaults to `false`)
+- Extensible validation configuration: `validations: %{invitation: %{name_required: true}}` (defaults to requiring names)
+- Per-function validation options to override configuration defaults via `require_name` option
 - Comprehensive development setup documentation in README
 - Database migration tests and name validation tests
 - CHANGELOG.md following Keep a Changelog format
 
 ### Changed
 - Migration system now uses `migrate_to_latest/1` instead of `create_usher_invitations_table/1`
-- Name field is always nullable in database to avoid breaking changes
-- Name validation is handled at application level, not database level
+- Consolidated multiple function arities into single functions with default parameters
 - Updated README with complete development setup guide
-- Enhanced configuration examples with new options
+- Enhanced configuration examples with extensible validation structure
 - Error atom changed from `:expired` to `:invitation_expired` for consistency
 
 ### Removed

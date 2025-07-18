@@ -81,7 +81,11 @@ config :usher,
   token_length: 16,
   default_expires_in: {7, :day},
   table_name: "usher_invitations",
-  name_required: false
+  validations: %{
+    invitation: %{
+      name_required: false
+    }
+  }
 ```
 
 All the values above have defaults, which you can find in `Usher.Config`.
@@ -130,24 +134,6 @@ case Usher.validate_invitation_token("abc123") do
     IO.puts("This invitation has expired")
 end
 
-# Validate with name requirement
-case Usher.validate_invitation_token("abc123", require_name: true) do
-  {:ok, invitation} -> 
-    # Valid invitation with name - proceed with registration
-    IO.puts("Welcome #{invitation.name}! Invitation expires: #{invitation.expires_at}")
-    
-  {:error, :name_required} -> 
-    # Token exists but has no name
-    IO.puts("This invitation requires a name")
-    
-  {:error, :invalid_token} -> 
-    # Token doesn't exist
-    IO.puts("Invalid invitation token")
-    
-  {:error, :invitation_expired} -> 
-    # Token exists but expired
-    IO.puts("This invitation has expired")
-end
 ```
 
 ### Tracking Usage
@@ -533,7 +519,7 @@ end
 | `:token_length` | `16` | Length of generated invitation tokens |
 | `:default_expires_in` | `{7, :day}` | Default expiration period for new invitations |
 | `:table_name` | `"usher_invitations"` | Database table name for invitations |
-| `:name_required` | `false` | Whether to require names for invitations by default |
+| `:validations` | `%{invitation: %{name_required: true}}` | Validation configuration for schemas |
 
 ## Examples
 

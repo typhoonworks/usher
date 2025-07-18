@@ -34,6 +34,10 @@ defmodule Usher.Invitation do
   @doc """
   Changeset for creating and updating invitations.
 
+  ## Options
+
+    * `:require_name` - Whether to require the name field (defaults to Config.name_required?())
+
   ## Examples
 
       iex> Usher.Invitation.changeset(%Usher.Invitation{}, %{
@@ -44,33 +48,11 @@ defmodule Usher.Invitation do
 
       iex> Usher.Invitation.changeset(%Usher.Invitation{}, %{})
       %Ecto.Changeset{valid?: false, errors: [token: {"can't be blank", _}]}
-  """
-  def changeset(invitation, attrs) do
-    invitation
-    |> cast(attrs, [:token, :name, :expires_at, :joined_count])
-    |> validate_required([:token, :expires_at])
-    |> validate_name_if_required()
-    |> validate_number(:joined_count, greater_than_or_equal_to: 0)
-    |> validate_future_date(:expires_at)
-    |> unique_constraint(:token, name: :usher_invitations_token_index)
-  end
-
-  @doc """
-  Changeset for creating and updating invitations with optional name validation.
-
-  ## Options
-
-    * `:require_name` - Whether to require the name field (defaults to false)
-
-  ## Examples
-
-      iex> Usher.Invitation.changeset(%Usher.Invitation{}, %{token: "abc", expires_at: ~U[2024-12-31 23:59:59Z]})
-      %Ecto.Changeset{valid?: true}
 
       iex> Usher.Invitation.changeset(%Usher.Invitation{}, %{token: "abc", expires_at: ~U[2024-12-31 23:59:59Z]}, require_name: true)
       %Ecto.Changeset{valid?: false, errors: [name: {"can't be blank", _}]}
   """
-  def changeset(invitation, attrs, opts) do
+  def changeset(invitation, attrs, opts \\ []) do
     invitation
     |> cast(attrs, [:token, :name, :expires_at, :joined_count])
     |> validate_required([:token, :expires_at])
@@ -95,7 +77,7 @@ defmodule Usher.Invitation do
     change(invitation, joined_count: invitation.joined_count + 1)
   end
 
-  defp validate_name_if_required(changeset, opts \\ []) do
+  defp validate_name_if_required(changeset, opts) do
     require_name = Keyword.get(opts, :require_name, Config.name_required?())
 
     if require_name do
