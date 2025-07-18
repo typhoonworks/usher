@@ -84,7 +84,8 @@ defmodule Usher.Migration do
   @spec migrate_to_version(String.t()) :: no_return()
   def migrate_to_version(version) do
     if version not in @all_versions do
-      raise ArgumentError, "Invalid migration version: #{version}. Valid versions are: #{@all_versions}"
+      raise ArgumentError,
+            "Invalid migration version: #{version}. Valid versions are: #{@all_versions}"
     end
 
     current_version = get_current_version()
