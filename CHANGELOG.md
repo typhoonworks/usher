@@ -43,7 +43,8 @@ end
 - Configuration options for entity tracking:
   - `valid_entity_types` - Define allowed entity types
   - `valid_actions` - Define allowed actions
-- Comprehensive documentation with dedicated guide files.
+- Split the README into individual guides, now also included in the hexdocs as "guides".
+- Added `jason` as a dependency because it's required for custom Ecto types (used for allowing atoms from strings in the schema definition).
 
 ### Changed
 - **`Usher.Migration.migrate_to_latest/1` is deprecated; use `Usher.Migration.migrate_to_version/1` instead.** `Usher.Migration.migrate_to_latest/1` will be removed in the next major release. Please check the [installation guide](guides/installation.md) for new migration instructions.
