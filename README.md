@@ -54,7 +54,7 @@ Follow the [installation instructions](guides/installation.md) to set up Usher i
 Take a look at the [overview guide](guides/overview.md) for a quick introduction to Usher.
 
 ## Phoenix Integration
-Take a look at the [Phoenix integration guide](guides/phoenix_integration.md) for details on how to set up Usher in your Phoenix application.
+Take a look at the [Phoenix integration guide](guides/phoenix-integration.md) for details on how to set up Usher in your Phoenix application.
 
 ## Configuration Options
 View all the configuration options in the [configuration guide](guides/configuration.md).
@@ -62,17 +62,8 @@ View all the configuration options in the [configuration guide](guides/configura
 ## Contributing
 See the [contribution guide](guides/contributing.md) for details on how to contribute to Usher.
 
-## Contributing
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the development setup above
-4. Run tests (`mix test`)
-5. Commit your changes (`git commit -am 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Inspiration
 We first built this invitation system into [Accomplish](https://github.com/typhoonworks/accomplish) and then decided to open-source it.

@@ -18,7 +18,7 @@ defmodule Usher.Migration do
         import Usher.Migration
 
         def change do
-          migrate_to_latest()
+          migrate_to_version("v03")
         end
       end
 
@@ -29,12 +29,9 @@ defmodule Usher.Migration do
         import Usher.Migration
 
         def change do
-          migrate_to_latest()
+          migrate_to_version("v03")
         end
       end
-
-  The `migrate_to_latest/1` function will automatically detect the current version
-  and apply only the necessary migrations to reach the latest version.
   """
   use Ecto.Migration
 
@@ -82,11 +79,7 @@ defmodule Usher.Migration do
 
   ## Examples
 
-      # Migrate to latest with defaults
-      migrate_to_latest()
-
-      # Migrate with custom options
-      migrate_to_latest(table_name: "my_invitations", prefix: "public")
+      migrate_to_version("v03")
   """
   @spec migrate_to_version(String.t()) :: no_return()
   def migrate_to_version(version) do

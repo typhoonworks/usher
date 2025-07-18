@@ -48,7 +48,7 @@ defmodule MyApp.Repo.Migrations.InstallUsherTables do
   use Ecto.Migration
 
   def change do
-    Usher.Migration.migrate_to_latest()
+    Usher.Migration.migrate_to_version("v03")
   end
 end
 ```
@@ -63,7 +63,7 @@ mix ecto.migrate
 
 This will create the necessary tables for storing invitations and tracking their usage.
 
-Use the same migration code  whenever new tables are added by the Usher library - `migrate_to_latest()` will automatically detect your current version and apply only the necessary migrations.
+> ℹ️ Pass in the `Usher.Migration.latest_version/0` value to `Usher.Migration.migrate_to_version/1` to apply only the necessary migrations.
 
 ## Next Steps
 
