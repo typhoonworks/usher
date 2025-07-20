@@ -3,7 +3,7 @@ defmodule Usher.TestFixtures do
   Test fixtures for Usher tests.
   """
 
-  alias Usher.{Test.Repo, Invitation}
+  alias Usher.{Test.Repo, Invitation, InvitationUsage}
 
   @doc """
   Generate a valid invitation.
@@ -68,5 +68,25 @@ defmodule Usher.TestFixtures do
       })
 
     invitation_fixture(attrs)
+  end
+
+  @doc """
+  Generate an invitation usage record.
+  """
+  def invitation_usage_fixture(invitation \\ nil, attrs \\ %{}) do
+    invitation = invitation || invitation_fixture()
+
+    attrs =
+      Enum.into(attrs, %{
+        invitation_id: invitation.id,
+        entity_type: :user,
+        entity_id: "test_entity_#{System.unique_integer([:positive])}",
+        action: :registered,
+        metadata: %{}
+      })
+
+    %InvitationUsage{}
+    |> InvitationUsage.changeset(attrs)
+    |> Repo.insert!()
   end
 end

@@ -11,7 +11,13 @@ config :usher,
   repo: Usher.Test.Repo,
   token_length: 16,
   default_expires_in: {7, :day},
-  table_name: "usher_invitations"
+  table_name: "usher_invitations",
+  validations: %{
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
+    }
+  }
 
 config :usher, Usher.Test.Repo,
   username: "postgres",
