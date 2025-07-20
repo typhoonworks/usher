@@ -19,8 +19,12 @@ Here's a basic example, to get you started:
 # Only the required configuration options are shown below.
 config :usher,
   repo: MyApp.Repo,
-  valid_entity_types: [:user, :company],
-  valid_actions: [:visited, :registered, :activated]
+  validations: %{
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company],
+      valid_usage_actions: [:visited, :registered, :activated]
+    }
+  }
 ```
 
 You can find details about configuration options in the [Configuration Guide](configuration.md).

@@ -26,12 +26,17 @@ defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV03 do
 end
 ```
 
-Then, update your configuration to include the new `valid_entity_types` and `valid_actions` options:
+Then, update your configuration to include the new `valid_usage_entity_types` and `valid_usage_actions` options, under the `validations` key:
 ```elixir
 config :usher, Usher.Config,
-  valid_entity_types: [:user, :organization],
-  valid_actions: [:visited, :registered]
+  validations: %{
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :organization],
+      valid_usage_actions: [:visited, :registered]
+    }
+  }
 ```
+**Note: the new `valid_usage_entity_types` and `valid_usage_actions` options are required**.
 
 See the [configuration guide](guides/configuration.md) for more details.
 
@@ -49,8 +54,8 @@ See the [configuration guide](guides/configuration.md) for more details.
   - `Usher.list_invitation_usages_by_unique_entity/2` - Get unique entities that have used an invitation
   - `Usher.entity_used_invitation?/4` - Check if an entity has used an invitation
 - Configuration options for entity tracking:
-  - `valid_entity_types` - Define allowed entity types
-  - `valid_actions` - Define allowed actions
+  - `valid_usage_entity_types` - Define allowed entity types
+  - `valid_usage_actions` - Define allowed actions
 - Split the README into individual guides, now also included in the hexdocs as "guides".
 - Added `jason` as a dependency because it's required for custom Ecto types (used for allowing atoms from strings in the schema definition).
 

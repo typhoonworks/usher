@@ -134,19 +134,32 @@ defmodule Usher.Config do
 
   This is required for usage tracking to function and must be set in your application config:
 
-      config :usher, valid_entity_types: [:user, :company, :device]
+      config :usher,
+        validations: %{
+          invitation_usage: %{
+            valid_usage_entity_types: [:user, :company, :device]
+          }
+        }
 
   Raises if not configured.
   """
-  def valid_entity_types do
-    case Application.get_env(:usher, :valid_entity_types) do
+  def valid_usage_entity_types do
+    valid_usage_entity_types =
+      validations() |> get_in([:invitation_usage, :valid_usage_entity_types])
+
+    case valid_usage_entity_types do
       nil ->
         raise """
-        No valid_entity_types configured for Usher.
+        No valid_usage_entity_types configured for Usher.
 
         Configure valid entity types in your application config:
 
-            config :usher, valid_entity_types: [:user, :company, :device]
+            config :usher,
+              validations: %{
+                invitation_usage: %{
+                  valid_usage_entity_types: [:user, :company, :device]
+                }
+              }
         """
 
       types when is_list(types) ->
@@ -154,7 +167,7 @@ defmodule Usher.Config do
           types
         else
           raise """
-          Invalid valid_entity_types configuration for Usher: #{inspect(types)}
+          Invalid valid_usage_entity_types configuration for Usher: #{inspect(types)}
 
           Expected a list of atoms, got: #{inspect(types)}
           """
@@ -162,7 +175,7 @@ defmodule Usher.Config do
 
       invalid ->
         raise """
-        Invalid valid_entity_types configuration for Usher: #{inspect(invalid)}
+        Invalid valid_usage_entity_types configuration for Usher: #{inspect(invalid)}
 
         Expected a list of atoms, got: #{inspect(invalid)}
         """
@@ -174,19 +187,31 @@ defmodule Usher.Config do
 
   This is required for usage tracking to function and must be set in your application config:
 
-      config :usher, valid_actions: [:visited, :registered, :activated]
+      config :usher,
+        validations: %{
+          invitation_usage: %{
+            valid_usage_actions: [:visited, :registered, :activated]
+          }
+        }
 
   Raises if not configured.
   """
-  def valid_actions do
-    case Application.get_env(:usher, :valid_actions) do
+  def valid_usage_actions do
+    valid_usage_actions = validations() |> get_in([:invitation_usage, :valid_usage_actions])
+
+    case valid_usage_actions do
       nil ->
         raise """
-        No valid_actions configured for Usher.
+        No valid_usage_actions configured for Usher.
 
         Configure valid actions in your application config:
 
-            config :usher, valid_actions: [:visited, :registered, :activated]
+            config :usher,
+              validations: %{
+                invitation_usage: %{
+                  valid_usage_actions: [:visited, :registered, :activated]
+                }
+              }
         """
 
       actions when is_list(actions) ->
@@ -194,7 +219,7 @@ defmodule Usher.Config do
           actions
         else
           raise """
-          Invalid valid_actions configuration for Usher: #{inspect(actions)}
+          Invalid valid_usage_actions configuration for Usher: #{inspect(actions)}
 
           Expected a list of atoms, got: #{inspect(actions)}
           """
@@ -202,7 +227,7 @@ defmodule Usher.Config do
 
       invalid ->
         raise """
-        Invalid valid_actions configuration for Usher: #{inspect(invalid)}
+        Invalid valid_usage_actions configuration for Usher: #{inspect(invalid)}
 
         Expected a list of atoms, got: #{inspect(invalid)}
         """
@@ -222,9 +247,13 @@ defmodule Usher.Config do
         token_length: 16,
         default_expires_in: {7, :day},
         table_name: "usher_invitations",
-        validations: %{invitation: %{name_required: true}},
-        valid_entity_types: [:user, :company],
-        valid_actions: [:visited, :registered]
+        validations: %{
+          invitation: %{name_required: true}
+          invitation_usage: %{
+            valid_usage_entity_types: [:user, :company],
+            valid_usage_actions: [:visited, :registered]
+          }
+        }
       ]
   """
   def all do
@@ -233,9 +262,7 @@ defmodule Usher.Config do
       token_length: token_length(),
       default_expires_in: default_expires_in(),
       table_name: table_name(),
-      validations: validations(),
-      valid_entity_types: valid_entity_types(),
-      valid_actions: valid_actions()
+      validations: validations()
     ]
   end
 end

@@ -17,9 +17,13 @@ First, configure the valid entity types and actions in your `config/config.exs`:
 ```elixir
 config :usher,
   repo: MyApp.Repo,
-  # Required for entity tracking
-  valid_entity_types: [:user, :company, :device, :organization],
-  valid_actions: [:visited, :registered, :activated, :converted]
+  validations: %{
+    invitation_usage: %{
+      # Required for entity tracking
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
+    }
+  }
 ```
 
 ## Database Setup
@@ -234,10 +238,10 @@ case Usher.track_invitation_usage(token, :user, "123", :registered) do
     # Invitation has expired
     
   {:error, :invalid_entity_type} -> 
-    # Entity type not in valid_entity_types config
+    # Entity type not in valid_usage_entity_types config
     
   {:error, :invalid_action} -> 
-    # Action not in valid_actions config
+    # Action not in valid_usage_actions config
     
   {:error, %Ecto.Changeset{}} -> 
     # Database constraint violation (e.g., duplicate tracking)

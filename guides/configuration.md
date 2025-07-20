@@ -27,8 +27,6 @@ config :usher,
 | `:token_length` | integer | `16` | No | Length of generated invitation tokens |
 | `:default_expires_in` | tuple | `{7, :day}` | No | Default expiration period for new invitations |
 | `:table_name` | string | `"usher_invitations"` | No | Database table name for invitations |
-| `:valid_entity_types` | list | `[]` | No | List of atoms defining allowed entity types for usage tracking |
-| `:valid_actions` | list | `[]` | No | List of atoms defining allowed actions for usage tracking |
 | `:validations` | map | `%{}` | No | Map defining validation rules for invitations |
 
 ### Validations
@@ -41,15 +39,24 @@ config :usher,
   validations: %{
     invitation: %{
       name_required: false
+    },
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
     }
   }
 ```
 
-The full map of available options are as follows:
+The available options for `:invitation` are:
+| Option | Type | Default | Required | Description |
+|--------|------|---------|----------|-------------|
+| `:name_required` | boolean | `true` | No | Whether the invitation must have a name |
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `:name_required` | boolean | `true` | Whether the invitation must have a name |
+The available options for `:invitation_usage` are:
+| Option | Type | Default | Required | Description |
+|--------|------|---------|----------|-------------|
+| `:valid_usage_entity_types` | list | `[]` | Yes | List of atoms defining allowed entity types for usage tracking |
+| `:valid_usage_actions` | list | `[]` | Yes | List of atoms defining allowed actions for usage tracking |
 
 ## Entity Usage Tracking Configuration
 
@@ -63,8 +70,12 @@ config :usher,
   default_expires_in: {7, :day},
   table_name: "usher_invitations",
   # Entity tracking configuration
-  valid_entity_types: [:user, :company, :device],
-  valid_actions: [:visited, :registered, :activated]
+  validations: %{
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
+    }
+  }
 ```
 
 ### Entity Types

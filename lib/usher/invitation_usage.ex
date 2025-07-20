@@ -61,7 +61,7 @@ defmodule Usher.InvitationUsage do
 
   defp validate_entity_type(changeset) do
     validate_change(changeset, :entity_type, fn :entity_type, entity_type ->
-      valid_types = Config.valid_entity_types()
+      valid_types = Config.valid_usage_entity_types()
 
       if entity_type in valid_types do
         []
@@ -76,12 +76,12 @@ defmodule Usher.InvitationUsage do
 
   defp validate_action(changeset) do
     validate_change(changeset, :action, fn :action, action ->
-      valid_actions = Config.valid_actions()
+      valid_usage_actions = Config.valid_usage_actions()
 
-      if action in valid_actions do
+      if action in valid_usage_actions do
         []
       else
-        [action: "must be one of: #{Enum.join(valid_actions, ", ")}"]
+        [action: "must be one of: #{Enum.join(valid_usage_actions, ", ")}"]
       end
     end)
   rescue
