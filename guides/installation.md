@@ -31,7 +31,32 @@ mix deps.get
 
 Usher requires database tables to store invitation data. You'll need to create and run a migration to set up these tables.
 
-### 1. Generate Migration
+### 1. Configuring the JSON library
+
+Ecto requires a JSON library for encoding and decoding JSON data. While this is optional, Usher requires it due to custom Ecto types.
+
+**If you're on Elixir 1.18 or later**, you can use the built-in `Elixir.JSON` module, like so:
+```elixir
+config :postgrex, json_library: Elixir.JSON
+```
+
+Otherwise, you can use `Jason` as your JSON library. Add it to your dependencies:
+
+```elixir
+def deps do
+  [
+    {:usher, "~> 0.1.0"},
+    {:jason, "~> 1.4"}
+  ]
+end
+```
+
+> ⚠️ if you change the `json_library` configuration, make sure to recompile the Postgrex adapter. [Otherwise your change won't be picked up](https://hexdocs.pm/ecto/Ecto.Schema.html#module-the-map-type):
+```bash
+mix deps.clean --build postgrex
+```
+
+### 2. Generate Migration
 
 Create a new migration file:
 
@@ -39,7 +64,7 @@ Create a new migration file:
 mix ecto.gen.migration install_usher_tables
 ```
 
-### 2. Add Migration Content
+### 3. Add Migration Content
 
 Add the Usher schema to your migration file:
 
@@ -53,7 +78,7 @@ defmodule MyApp.Repo.Migrations.InstallUsherTables do
 end
 ```
 
-### 3. Run Migration
+### 4. Run Migration
 
 Execute the migration:
 

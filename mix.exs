@@ -40,7 +40,7 @@ defmodule Usher.MixProject do
     [
       {:ecto, "~> 3.13"},
       {:ecto_sql, "~> 3.13"},
-      {:jason, "~> 1.4"},
+      {:jason, "~> 1.4", optional: true},
       {:postgrex, "~> 0.20", optional: true},
 
       # Development and testing dependencies

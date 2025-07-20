@@ -15,6 +15,10 @@ config :usher,
   validations: %{
     invitation: %{
       name_required: true
+    },
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
     }
   }
 ```
