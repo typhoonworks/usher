@@ -45,26 +45,5 @@ defmodule Usher.InvitationTest do
       refute changeset.valid?
       assert "must be in the future" in errors_on(changeset).expires_at
     end
-
-    test "invalid changeset with negative joined_count" do
-      changeset =
-        Invitation.changeset(%Invitation{}, %{
-          token: "valid_token",
-          expires_at: DateTime.add(DateTime.utc_now(), 1, :day),
-          joined_count: -1
-        })
-
-      refute changeset.valid?
-      assert "must be greater than or equal to 0" in errors_on(changeset).joined_count
-    end
-  end
-
-  describe "increment_joined_count_changeset/1" do
-    test "increments joined count by 1" do
-      invitation = %Invitation{joined_count: 5}
-      changeset = Invitation.increment_joined_count_changeset(invitation)
-
-      assert changeset.changes.joined_count == 6
-    end
   end
 end

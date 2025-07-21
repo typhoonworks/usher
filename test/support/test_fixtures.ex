@@ -13,8 +13,7 @@ defmodule Usher.TestFixtures do
       Enum.into(attrs, %{
         token: "test_token_" <> (System.unique_integer([:positive]) |> to_string()),
         name: "Test Invitation",
-        expires_at: DateTime.add(DateTime.utc_now(), 7, :day),
-        joined_count: 0
+        expires_at: DateTime.add(DateTime.utc_now(), 7, :day)
       })
 
     %Invitation{}
@@ -44,18 +43,6 @@ defmodule Usher.TestFixtures do
     invitation
     |> Ecto.Changeset.change(expires_at: expires_at_in_the_past)
     |> Repo.update!()
-  end
-
-  @doc """
-  Generate a used invitation (with joined_count > 0).
-  """
-  def used_invitation_fixture(attrs \\ %{}) do
-    attrs =
-      Enum.into(attrs, %{
-        joined_count: 1
-      })
-
-    invitation_fixture(attrs)
   end
 
   @doc """

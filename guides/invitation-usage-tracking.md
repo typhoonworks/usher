@@ -209,18 +209,6 @@ defmodule MyApp.InvitationAnalytics do
 end
 ```
 
-## Legacy Tracking
-
-For simple use cases, you can still use the basic joined count:
-
-```elixir
-# Increment the simple counter
-{:ok, updated_invitation} = Usher.increment_joined_count(invitation)
-
-# Access the count
-count = invitation.joined_count
-```
-
 ## Error Handling
 
 Common error scenarios and handling:

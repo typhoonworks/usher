@@ -117,22 +117,6 @@ defmodule Usher do
   end
 
   @doc """
-  Increments the joined count for an invitation.
-
-  This is typically called when a user successfully registers using the invitation.
-
-  ## Examples
-
-      iex> Usher.increment_joined_count(invitation)
-      {:ok, %Usher.Invitation{joined_count: 1}}
-  """
-  def increment_joined_count(%Invitation{} = invitation) do
-    invitation
-    |> Invitation.increment_joined_count_changeset()
-    |> Config.repo().update()
-  end
-
-  @doc """
   Deletes an invitation.
 
   ## Examples

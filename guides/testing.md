@@ -99,10 +99,5 @@ defmodule MyApp.InvitationTestHelpers do
   def invitation_url_for(invitation, base_url \\ "http://localhost:4000/signup") do
     Usher.invitation_url(invitation.token, base_url)
   end
-  
-  def assert_invitation_used(invitation, expected_count \\ 1) do
-    updated_invitation = Usher.get_invitation!(invitation.id)
-    assert updated_invitation.joined_count == expected_count
-  end
 end
 ```

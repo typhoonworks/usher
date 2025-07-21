@@ -8,7 +8,6 @@ defmodule UsherTest do
       assert invitation.token
       assert invitation.name == "Test Invitation"
       assert invitation.expires_at
-      assert invitation.joined_count == 0
       # Configured in `config.exs`
       assert String.length(invitation.token) == 16
     end
@@ -54,14 +53,6 @@ defmodule UsherTest do
       invitation = expired_invitation_fixture()
 
       assert {:error, :invitation_expired} = Usher.validate_invitation_token(invitation.token)
-    end
-  end
-
-  describe "increment_joined_count/1" do
-    test "increments the joined count" do
-      invitation = invitation_fixture(%{joined_count: 0})
-      assert {:ok, updated} = Usher.increment_joined_count(invitation)
-      assert updated.joined_count == 1
     end
   end
 

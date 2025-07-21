@@ -29,20 +29,24 @@ defmodule MyAppWeb.UserRegistrationController do
     case validate_invitation_from_params(params) do
       {:ok, invitation} ->
         # Create user and increment invitation count
-        MyApp.Repo.transaction(fn ->
-          with {:ok, user} <- create_user(user_params),
-              {:ok, _} <- Usher.increment_joined_count(invitation) do
-            conn
-            |> put_flash(:info, "Account created successfully!")
-            |> redirect(to: ~p"/dashboard")
-          end
-        end)
+        create_user(invitation, user_params)
         
       {:error, reason} ->
         # This is a function that you can define,
         # e.g. in the fallback controller.
         handle_invitation_error(conn, reason)
     end
+  end
+
+  defp create_user(invitation, user_params) do
+    MyApp.Repo.transaction(fn ->
+      with {:ok, user} <- create_user(user_params),
+          {:ok, _} <- Usher.track_invitation_usage(invitation, :user, user.id, :registered) do
+        conn
+        |> put_flash(:info, "Account created successfully!")
+        |> redirect(to: ~p"/dashboard")
+      end
+    end)
   end
   
   defp validate_invitation_from_params(params) do
@@ -151,8 +155,9 @@ defmodule MyAppWeb.RegistrationLive do
     case MyApp.Users.create_user(user_params) do
       {:ok, user} ->
         # Increment invitation usage
-        {:ok, _} = Usher.increment_joined_count(socket.assigns.invitation)
-        
+        invitation = socket.assigns.invitation
+        {:ok, _} = Usher.track_invitation_usage(invitation, :user, user.id, :registered)
+
         {:noreply,
          socket
          |> put_flash(:info, "Registration successful!")
