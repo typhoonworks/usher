@@ -201,8 +201,13 @@ defmodule MyApp.InvitationValidator do
   
   defp check_usage_limits(invitation, context) do
     max_uses = Map.get(context, :max_uses, 100)
+
+    invitation_usage_count =
+      invitation
+      |> Usher.list_invitation_usages_by_unique_entity(action: :joined)
+      |> Enum.count()
     
-    if invitation.joined_count >= max_uses do
+    if invitation_usage_count >= max_uses do
       {:error, :usage_limit_exceeded}
     else
       :ok

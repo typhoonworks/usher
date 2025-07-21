@@ -47,7 +47,6 @@ end
 Alternatively, you can delete the old Usher migrations and keep the latest migration that calls `Usher.Migration.migrate_to_version("v03")`, which will create all the necessary tables.
 
 **2. New Database Migration and Required Configuration:**
-
 For existing installations, create a new migration:
 ```bash
 mix ecto.gen.migration upgrade_usher_tables_v03
@@ -74,11 +73,17 @@ config :usher, Usher.Config,
     }
   }
 ```
-**Note: the new `valid_usage_entity_types` and `valid_usage_actions` options are required**.
+_Note: the new `valid_usage_entity_types` and `valid_usage_actions` options are **required**_
 
 See the [configuration guide](guides/configuration.md) for more details.
 
 > ⚠️ There was a change in the migration system. The `migrate_to_latest/1` function is deprecated and will be removed in the next major release. Use `migrate_to_version/1` instead.
+
+**3. Removed `Usher.increment_joined_count/1` function:**
+The `Usher.increment_joined_count/1` function has been removed. Use the new `Usher.track_invitation_usage/5` function to track invitation usage instead:
+```elixir
+{:ok, _} = Usher.track_invitation_usage(invitation, :user, user.id, :registered, metadata)
+```
 
 ### Added
 - **Invitation Usage Tracking System**: Introduced mapping between invitations and entity interactions

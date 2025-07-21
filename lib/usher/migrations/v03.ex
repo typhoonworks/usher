@@ -30,6 +30,10 @@ defmodule Usher.Migrations.V03 do
     create(index(:usher_invitation_usages, [:action]))
     create(index(:usher_invitation_usages, [:inserted_at]))
 
+    alter table(:usher_invitations, table_opts) do
+      remove(:joined_count)
+    end
+
     # Update version comment to track migration state
     prefix = Keyword.get(opts, :prefix, "public")
     execute("COMMENT ON TABLE #{prefix}.usher_invitations IS 'v03'")
@@ -37,5 +41,9 @@ defmodule Usher.Migrations.V03 do
 
   def down(opts) do
     drop(table(:usher_invitation_usages, opts))
+
+    alter table(:usher_invitations) do
+      add(:joined_count, :integer, default: 0, null: false)
+    end
   end
 end

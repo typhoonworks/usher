@@ -14,7 +14,6 @@ defmodule Usher.Invitation do
           token: String.t(),
           name: String.t() | nil,
           expires_at: DateTime.t(),
-          joined_count: integer(),
           usages: [Usher.InvitationUsage.t()] | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
@@ -27,7 +26,6 @@ defmodule Usher.Invitation do
     field(:token, :string)
     field(:name, :string)
     field(:expires_at, :utc_datetime)
-    field(:joined_count, :integer, default: 0)
 
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
@@ -57,27 +55,11 @@ defmodule Usher.Invitation do
   """
   def changeset(invitation, attrs, opts \\ []) do
     invitation
-    |> cast(attrs, [:token, :name, :expires_at, :joined_count])
+    |> cast(attrs, [:token, :name, :expires_at])
     |> validate_required([:token, :expires_at])
     |> validate_name_if_required(opts)
-    |> validate_number(:joined_count, greater_than_or_equal_to: 0)
     |> validate_future_date(:expires_at)
     |> unique_constraint(:token, name: :usher_invitations_token_index)
-  end
-
-  @doc """
-  Changeset for incrementing the joined count.
-
-  This is for when a user successfully registers using the invitation.
-
-  ## Examples
-
-      iex> invitation = %Usher.Invitation{joined_count: 0}
-      iex> Usher.Invitation.increment_joined_count_changeset(invitation)
-      %Ecto.Changeset{changes: %{joined_count: 1}}
-  """
-  def increment_joined_count_changeset(invitation) do
-    change(invitation, joined_count: invitation.joined_count + 1)
   end
 
   defp validate_name_if_required(changeset, opts) do

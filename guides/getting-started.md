@@ -87,9 +87,8 @@ end
 When a user successfully uses an invitation (e.g., completes registration), track the usage:
 
 ```elixir
-# Increment the usage counter
-{:ok, updated_invitation} = Usher.increment_joined_count(invitation)
-IO.puts("#{updated_invitation.joined_count} users have used this invitation")
+# You can also pass in invitation.token.
+Usher.track_invitation_usage(invitation, :user, user.id, :registered, metadata)
 ```
 
 ### Building Invitation URLs
@@ -126,25 +125,23 @@ defmodule MyApp.InvitationWorkflow do
     
     {:ok, invitation}
   end
-  
-  def handle_signup(params) do
-    case params["invitation_token"] do
-      token when is_binary(token) ->
-        case Usher.validate_invitation_token(token) do
-          {:ok, invitation} ->
-            # Proceed with user registration
-            with {:ok, user} <- create_user(params),
-                 {:ok, _} <- Usher.increment_joined_count(invitation) do
-              {:ok, user}
-            end
-            
-          {:error, reason} ->
-            {:error, "Invalid invitation: #{reason}"}
+
+  def handle_signup(%{"invitation_token" => token}) when is_binary(token) do
+    case Usher.validate_invitation_token(token) do
+      {:ok, invitation} ->
+        # Proceed with user registration
+        with {:ok, user} <- create_user(params),
+              {:ok, _} <- Usher.track_invitation_usage(invitation, :user, user.id, :registered) do
+          {:ok, user}
         end
         
-      _ ->
-        {:error, "Invitation token required"}
+      {:error, reason} ->
+        {:error, "Invalid invitation: #{reason}"}
     end
+  end
+
+  def handle_signup(_params) do
+    {:error, "No invitation token provided"}
   end
   
   defp create_user(params) do
