@@ -7,17 +7,13 @@ defmodule Usher.Migrations.V03 do
   """
   use Ecto.Migration
 
-  alias Usher.Config
-
   def up(opts) do
-    table_name = Keyword.get(opts, :table_name, "usher_invitation_usages")
-    invitations_table_name = Keyword.get(opts, :invitations_table_name, Config.table_name())
     table_opts = Keyword.take(opts, [:prefix])
 
-    create table(table_name, [primary_key: false] ++ table_opts) do
+    create table(:usher_invitation_usages, [primary_key: false] ++ table_opts) do
       add(:id, :uuid, primary_key: true)
 
-      add(:invitation_id, references(invitations_table_name, type: :uuid, on_delete: :delete_all),
+      add(:invitation_id, references(:usher_invitations, type: :uuid, on_delete: :delete_all),
         null: false
       )
 
@@ -29,19 +25,17 @@ defmodule Usher.Migrations.V03 do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(index(table_name, [:invitation_id]))
-    create(index(table_name, [:entity_type, :entity_id]))
-    create(index(table_name, [:action]))
-    create(index(table_name, [:inserted_at]))
+    create(index(:usher_invitation_usages, [:invitation_id]))
+    create(index(:usher_invitation_usages, [:entity_type, :entity_id]))
+    create(index(:usher_invitation_usages, [:action]))
+    create(index(:usher_invitation_usages, [:inserted_at]))
 
     # Update version comment to track migration state
     prefix = Keyword.get(opts, :prefix, "public")
-    execute("COMMENT ON TABLE #{prefix}.#{table_name} IS 'v03'")
+    execute("COMMENT ON TABLE #{prefix}.usher_invitations IS 'v03'")
   end
 
   def down(opts) do
-    table_name = Keyword.get(opts, :table_name, "usher_invitation_usages")
-
-    drop(table(table_name))
+    drop(table(:usher_invitation_usages, opts))
   end
 end

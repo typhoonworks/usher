@@ -11,7 +11,6 @@ config :usher,
   repo: MyApp.Repo,
   token_length: 16,
   default_expires_in: {7, :day},
-  table_name: "usher_invitations",
   validations: %{
     invitation: %{
       name_required: true
@@ -30,7 +29,6 @@ config :usher,
 | `:repo` | module | N/A | **Yes** | Your Ecto repository module |
 | `:token_length` | integer | `16` | No | Length of generated invitation tokens |
 | `:default_expires_in` | tuple | `{7, :day}` | No | Default expiration period for new invitations |
-| `:table_name` | string | `"usher_invitations"` | No | Database table name for invitations |
 | `:validations` | map | `%{}` | No | Map defining validation rules for invitations |
 
 ### Validations
@@ -72,7 +70,6 @@ config :usher,
   # Basic configuration
   token_length: 16,
   default_expires_in: {7, :day},
-  table_name: "usher_invitations",
   # Entity tracking configuration
   validations: %{
     invitation_usage: %{

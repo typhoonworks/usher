@@ -59,26 +59,6 @@ defmodule Usher.Config do
   end
 
   @doc """
-  Returns the configured table name for invitations.
-
-  Defaults to "usher_invitations" if not configured.
-
-  ## Examples
-
-      # Default
-      iex> Usher.Config.table_name()
-      "usher_invitations"
-
-      # Configured
-      config :usher, table_name: "my_invitations"
-      iex> Usher.Config.table_name()
-      "my_invitations"
-  """
-  def table_name do
-    Application.get_env(:usher, :table_name, "usher_invitations")
-  end
-
-  @doc """
   Returns validation configuration for all schemas.
 
   Defaults to %{invitation: %{name_required: true}} if not configured.
@@ -246,7 +226,6 @@ defmodule Usher.Config do
         repo: MyApp.Repo,
         token_length: 16,
         default_expires_in: {7, :day},
-        table_name: "usher_invitations",
         validations: %{
           invitation: %{name_required: true}
           invitation_usage: %{
@@ -261,7 +240,6 @@ defmodule Usher.Config do
       repo: repo(),
       token_length: token_length(),
       default_expires_in: default_expires_in(),
-      table_name: table_name(),
       validations: validations()
     ]
   end
