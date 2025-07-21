@@ -44,6 +44,8 @@ defmodule MyApp.Repo.Migrations.RenameUsherInvitationsTable do
 end
 ```
 
+Alternatively, you can delete the old Usher migrations and keep the latest migration that calls `Usher.Migration.migrate_to_version("v03")`, which will create all the necessary tables.
+
 **2. New Database Migration and Required Configuration:**
 
 For existing installations, create a new migration:
