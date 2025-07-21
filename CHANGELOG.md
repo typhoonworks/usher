@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] - 2025-07-20
+## [0.3.0] - 2025-07-21
 
 ### Migration Guide
 
@@ -109,6 +109,10 @@ The `Usher.increment_joined_count/1` function has been removed. Use the new `Ush
 - **`Usher.Migration.migrate_to_latest/1` is deprecated; use `Usher.Migration.migrate_to_version/1` instead.** `Usher.Migration.migrate_to_latest/1` will be removed in the next major release. Please check the [installation guide](guides/installation.md) for new migration instructions.
 - Updated `Usher.Invitation` schema with new associations to usage tracking schema.
 - Added new config options to `Usher.Config` for specifying valid entity types and actions that can be tracked with the invitation usage system.
+
+### Removed
+- Removed `Usher.increment_joined_count/1` function. Use `Usher.track_invitation_usage/5` instead to track invitation usage.
+- Removed `table_name` configuration option. Usher now uses a fixed table name `usher_invitations` for the invitations table.
 
 ## [0.2.0] - 2025-07-18
 

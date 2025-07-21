@@ -65,8 +65,9 @@ defmodule Usher.MixProject do
       extras: docs_guides(),
       groups_for_modules: [
         Core: [Usher, Usher.Config],
-        Schema: [Usher.Invitation],
-        Integrations: [Usher.Phoenix]
+        Schema: [Usher.Invitation, Usher.InvitationUsage, Usher.Types.Atom],
+        Migrations: [Usher.Migration, ~r/Usher\.Migrations\..+/],
+        Context: [~r/Usher\.Invitations\..+/]
       ]
     ]
   end
