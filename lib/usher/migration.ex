@@ -39,6 +39,7 @@ defmodule Usher.Migration do
 
   @latest_version "v03"
   @all_versions ["v01", "v02", "v03"]
+  @invitations_table_name "usher_invitations"
 
   @doc """
   Returns the latest version of the Usher migrations.
@@ -98,11 +99,10 @@ defmodule Usher.Migration do
   end
 
   defp get_current_version(opts \\ []) do
-    invitations_table_name = Config.table_name()
     prefix = Keyword.get(opts, :prefix, "public")
 
     case usher_repo().query(
-           "SELECT obj_description(oid) FROM pg_class WHERE relname = '#{invitations_table_name}' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '#{prefix}')"
+           "SELECT obj_description(oid) FROM pg_class WHERE relname = '#{@invitations_table_name}' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '#{prefix}')"
          ) do
       {:ok, %{rows: [[version]]}} when is_binary(version) -> version
       {:ok, %{rows: [[nil]]}} -> check_legacy_table(opts)
@@ -113,11 +113,10 @@ defmodule Usher.Migration do
 
   # Check if table exists but has no version comment (legacy installation)
   defp check_legacy_table(opts) do
-    invitations_table_name = Config.table_name()
     prefix = Keyword.get(opts, :prefix, "public")
 
     case usher_repo().query(
-           "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '#{invitations_table_name}' AND table_schema = '#{prefix}')"
+           "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '#{@invitations_table_name}' AND table_schema = '#{prefix}')"
          ) do
       {:ok, %{rows: [[true]]}} -> "legacy"
       _ -> nil

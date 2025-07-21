@@ -13,10 +13,9 @@ defmodule Usher.Migrations.V01 do
   use Ecto.Migration
 
   def up(opts) do
-    table_name = Keyword.get(opts, :table_name, "usher_invitations")
     table_opts = Keyword.take(opts, [:prefix])
 
-    create table(table_name, [primary_key: false] ++ table_opts) do
+    create table(:usher_invitations, [primary_key: false] ++ table_opts) do
       add(:id, :uuid, primary_key: true)
       add(:token, :string, null: false)
       add(:expires_at, :utc_datetime, null: false)
@@ -25,16 +24,15 @@ defmodule Usher.Migrations.V01 do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(unique_index(table_name, [:token], name: :"#{table_name}_token_index"))
-    create(index(table_name, [:expires_at]))
+    create(unique_index(:usher_invitations, [:token], name: :usher_invitations_token_index))
+    create(index(:usher_invitations, [:expires_at]))
 
     # Add version comment to track migration state
     prefix = Keyword.get(opts, :prefix, "public")
-    execute("COMMENT ON TABLE #{prefix}.#{table_name} IS 'v01'")
+    execute("COMMENT ON TABLE #{prefix}.usher_invitations IS 'v01'")
   end
 
   def down(opts) do
-    table_name = Keyword.get(opts, :table_name, "usher_invitations")
-    drop(table(table_name))
+    drop(table(:usher_invitations, opts))
   end
 end

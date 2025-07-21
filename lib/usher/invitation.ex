@@ -23,7 +23,7 @@ defmodule Usher.Invitation do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  schema Config.table_name() do
+  schema "usher_invitations" do
     field(:token, :string)
     field(:name, :string)
     field(:expires_at, :utc_datetime)

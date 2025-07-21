@@ -10,6 +10,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-07-20
 
 ### Migration Guide
+
+**1. Dropping `table_name` Configuration:**
+The `table_name` configuration option has been removed. Usher now uses a fixed table name `usher_invitations` for the invitations table.
+
+If you were using a custom table name, you will need to rename the table to `usher_invitations`. You can do this as follows, by creating a new migration:
+```bash
+mix ecto.gen.migration rename_usher_invitations_table
+```
+
+You might be wondering "if this is a breaking change, wouldn't the rename fail when I run all the migrations again (such as in a dev environment with `mix ecto.reset`)?". You won't encounter this issue if you check to see whether the `usher_invitations` table already exists before attempting to rename it. Here's an example migration that does this:
+```elixir
+defmodule MyApp.Repo.Migrations.RenameUsherInvitationsTable do
+  use Ecto.Migration
+
+  def up do
+    # Check if usher_invitations table exists using raw SQL
+    result = repo().query!("SELECT to_regclass('usher_invitations');")
+    table_exists? =
+      case result.rows do
+        [[value]] when not is_nil(value) -> true
+        _ -> false
+      end
+
+    if not table_exists? do
+      rename table(:your_invitations_table_name), to: table(:usher_invitations)
+    end
+  end
+
+  def down do
+    rename table(:usher_invitations), to: table(:your_invitations_table_name)
+  end
+end
+```
+
+**2. New Database Migration and Required Configuration:**
+
 For existing installations, create a new migration:
 ```bash
 mix ecto.gen.migration upgrade_usher_tables_v03

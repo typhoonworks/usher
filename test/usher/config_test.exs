@@ -18,10 +18,4 @@ defmodule Usher.ConfigTest do
       assert Usher.Config.default_expires_in() == {7, :day}
     end
   end
-
-  describe "table_name/0" do
-    test "returns configured table name" do
-      assert Usher.Config.table_name() == "usher_invitations"
-    end
-  end
 end
