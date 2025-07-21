@@ -23,8 +23,14 @@ Configure Usher for your test environment in `config/test.exs`:
 # config/test.exs
 config :usher,
   repo: MyApp.Repo,
-  token_length: 6,
-  default_expires_in: {1, :hour}
+  token_length: 6,  # Shorter tokens for tests
+  default_expires_in: {1, :hour},  # Short expiration for tests
+  validations: %{
+    invitation_usage: %{
+      valid_usage_entity_types: [:user, :company, :device],
+      valid_usage_actions: [:visited, :registered, :activated]
+    }
+  }
 ```
 
 ### Test Database Setup
