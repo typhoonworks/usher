@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Guide
 
 **1. Dropping `table_name` Configuration:**
+
 The `table_name` configuration option has been removed. Usher now uses a fixed table name `usher_invitations` for the invitations table.
 
 If you were using a custom table name, you will need to rename the table to `usher_invitations`. You can do this as follows, by creating a new migration:
@@ -47,6 +48,7 @@ end
 Alternatively, you can delete the old Usher migrations and keep the latest migration that calls `Usher.Migration.migrate_to_version("v03")`, which will create all the necessary tables.
 
 **2. New Database Migration and Required Configuration:**
+
 For existing installations, create a new migration:
 ```bash
 mix ecto.gen.migration upgrade_usher_tables_v03
@@ -80,6 +82,7 @@ See the [configuration guide](guides/configuration.md) for more details.
 > ⚠️ There was a change in the migration system. The `migrate_to_latest/1` function is deprecated and will be removed in the next major release. Use `migrate_to_version/1` instead.
 
 **3. Removed `Usher.increment_joined_count/1` function:**
+
 The `Usher.increment_joined_count/1` function has been removed. Use the new `Usher.track_invitation_usage/5` function to track invitation usage instead:
 ```elixir
 {:ok, _} = Usher.track_invitation_usage(invitation, :user, user.id, :registered, metadata)
