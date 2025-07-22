@@ -5,6 +5,17 @@ defmodule Usher.Config do
   Handles loading and validating configuration from the application environment.
   """
 
+  # Only introduced in Elixir 1.17 and since we support down to 1.14, we copy
+  # the type definition here.
+  @type duration_unit_pair() ::
+          {:year, integer()}
+          | {:month, integer()}
+          | {:week, integer()}
+          | {:day, integer()}
+          | {:hour, integer()}
+          | {:minute, integer()}
+          | {:second, integer()}
+
   @type validations :: %{
           optional(:invitation) => %{name_required: boolean()},
           required(:invitation_usage) => %{
@@ -16,7 +27,7 @@ defmodule Usher.Config do
   @type t :: [
           repo: Ecto.Repo.t(),
           token_length: non_neg_integer(),
-          default_expires_in: Duration.unit_pair(),
+          default_expires_in: duration_unit_pair(),
           validations: validations()
         ]
 
