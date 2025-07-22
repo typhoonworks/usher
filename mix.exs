@@ -1,7 +1,7 @@
 defmodule Usher.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.3.1"
   @source_url "https://github.com/typhoonworks/usher"
 
   def project do
@@ -45,7 +45,8 @@ defmodule Usher.MixProject do
 
       # Development and testing dependencies
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
+      {:mimic, "~> 2.0", only: :test}
     ]
   end
 

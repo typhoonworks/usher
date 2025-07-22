@@ -1,7 +1,16 @@
 defmodule Usher.InvitationTest do
   use Usher.DataCase, async: true
+  use Mimic
 
   alias Usher.Invitation
+
+  setup :verify_on_exit!
+
+  setup do
+    Mimic.copy(Application)
+
+    :ok
+  end
 
   describe "changeset/2" do
     test "valid changeset with required fields" do
@@ -44,6 +53,34 @@ defmodule Usher.InvitationTest do
 
       refute changeset.valid?
       assert "must be in the future" in errors_on(changeset).expires_at
+    end
+
+    test "name is required when name_required config is not set" do
+      expect(Application, :get_env, fn :usher, :validations, _ ->
+        %{}
+      end)
+
+      changeset =
+        Invitation.changeset(%Invitation{}, %{
+          token: "valid_token",
+          expires_at: DateTime.add(DateTime.utc_now(), 1, :day)
+        })
+
+      refute changeset.valid?
+    end
+
+    test "name is not required when name_required config is false" do
+      expect(Application, :get_env, fn :usher, :validations, _ ->
+        %{invitation: %{name_required: false}}
+      end)
+
+      changeset =
+        Invitation.changeset(%Invitation{}, %{
+          token: "valid_token",
+          expires_at: DateTime.add(DateTime.utc_now(), 1, :day)
+        })
+
+      assert changeset.valid?
     end
   end
 end

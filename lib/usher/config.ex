@@ -5,6 +5,21 @@ defmodule Usher.Config do
   Handles loading and validating configuration from the application environment.
   """
 
+  @type validations :: %{
+          optional(:invitation) => %{name_required: boolean()},
+          required(:invitation_usage) => %{
+            valid_usage_entity_types: list(atom()),
+            valid_usage_actions: list(atom())
+          }
+        }
+
+  @type t :: [
+          repo: Ecto.Repo.t(),
+          token_length: non_neg_integer(),
+          default_expires_in: Duration.unit_pair(),
+          validations: validations()
+        ]
+
   @doc """
   Returns the configured Ecto repository.
 
@@ -60,28 +75,10 @@ defmodule Usher.Config do
 
   @doc """
   Returns validation configuration for all schemas.
-
-  Defaults to %{invitation: %{name_required: true}} if not configured.
-
-  ## Examples
-
-      # Default
-      iex> Usher.Config.validations()
-      %{invitation: %{name_required: true}}
-
-      # Configured
-      config :usher, validations: %{
-        invitation: %{name_required: false}
-      }
-      iex> Usher.Config.validations()
-      %{invitation: %{name_required: false}}
   """
+  @spec validations() :: validations()
   def validations do
-    default_validations = %{
-      invitation: %{name_required: true}
-    }
-
-    Application.get_env(:usher, :validations, default_validations)
+    Application.get_env(:usher, :validations, %{})
   end
 
   @doc """
@@ -89,24 +86,19 @@ defmodule Usher.Config do
 
   This is a convenience function that extracts the name_required value
   from the validations configuration.
-
-  ## Examples
-
-      # Default
-      iex> Usher.Config.name_required?()
-      true
-
-      # Configured via validations
-      config :usher, validations: %{
-        invitation: %{name_required: false}
-      }
-      iex> Usher.Config.name_required?()
-      false
   """
+  @spec name_required?() :: boolean()
   def name_required? do
-    validations()
-    |> get_in([:invitation, :name_required])
-    |> Kernel.||(true)
+    validations = validations()
+    name_required = get_in(validations, [:invitation, :name_required])
+
+    case name_required do
+      name_required when is_boolean(name_required) ->
+        name_required
+
+      _ ->
+        true
+    end
   end
 
   @doc """
@@ -235,6 +227,7 @@ defmodule Usher.Config do
         }
       ]
   """
+  @spec all() :: t()
   def all do
     [
       repo: repo(),
