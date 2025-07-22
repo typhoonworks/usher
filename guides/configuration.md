@@ -50,15 +50,17 @@ config :usher,
 ```
 
 The available options for `:invitation` are:
+
 | Option | Type | Default | Required | Description |
 |--------|------|---------|----------|-------------|
 | `:name_required` | boolean | `true` | No | Whether the invitation must have a name |
 
 The available options for `:invitation_usage` are:
+
 | Option | Type | Default | Required | Description |
 |--------|------|---------|----------|-------------|
-| `:valid_usage_entity_types` | list | `[]` | Yes | List of atoms defining allowed entity types for usage tracking |
-| `:valid_usage_actions` | list | `[]` | Yes | List of atoms defining allowed actions for usage tracking |
+| `:valid_usage_entity_types` | list | `nil` | Yes | List of atoms defining allowed entity types for usage tracking |
+| `:valid_usage_actions` | list | `nil` | Yes | List of atoms defining allowed actions for usage tracking |
 
 ## Entity Usage Tracking Configuration
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-07-22
+
+### Fixed
+- Fixed a bug with the `%{invitation: %{name_required: boolean()}` configuration option not being correctly recognized when set to `false`. The `Usher.Config.name_required?/0` function now correctly returns `false` when the configuration is set to not require names for invitations.
+
 ## [0.3.0] - 2025-07-21
 
 ### Migration Guide
