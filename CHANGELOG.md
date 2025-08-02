@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+In a future release, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
+
+## [0.4.0] - 2025-08-02
+
 ### Migration Guide
 
 **Database Migration Required:**
@@ -21,12 +25,29 @@ mix ecto.gen.migration upgrade_usher_tables_v04
 defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV04 do
   use Ecto.Migration
 
-  def change do
+  def up do
     Usher.Migration.migrate_to_version("v04")
+  end
+
+  def down do
+    Usher.Migration.migrate_to_version("v03")
   end
 end
 ```
 This migration makes the `expires_at` column nullable to support never-expiring invitations.
+
+Additionally, you will have to go back to any Usher migrations using the `Usher.Migration.migrate_to_latest/1` function and change it to `Usher.Migration.migrate_to_version("v02")`, as the `Usher.Migration.migrate_to_latest/1` function has been removed:
+```elixir
+defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV02 do
+  use Ecto.Migration
+
+  def change do
+    # Previously:
+    # Usher.Migration.migrate_to_latest()
+    Usher.Migration.migrate_to_version("v02")
+  end
+end
+```
 
 ### Added
 - **Invitation Expiration/Extension System**: Added ability to extend, set, or remove expiration dates from invitations
@@ -39,6 +60,13 @@ This migration makes the `expires_at` column nullable to support never-expiring 
 ### Changed
 - `Usher.Invitation` schema now allows `nil` for `expires_at` field to support never-expiring invitations
 - `Usher.validate_invitation_token/1` now treats invitations with `nil` `expires_at` as valid (never expire)
+
+### Fixed
+- Migration "v03" now sets migration to version to "v02" when rolling back. Previously, it did not set the version correctly.
+- `Usher.Migration` functions were not executing `down/1` functions correctly. This has been fixed to ensure proper rollback behavior.
+
+### Removed
+- Removed deprecated `Usher.Migration.migrate_to_latest/1` function. Use `Usher.Migration.migrate_to_version/1` instead.
 
 ## [0.3.1] - 2025-07-22
 

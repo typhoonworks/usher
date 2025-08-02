@@ -19,13 +19,14 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - 🔐 **Token generation**: Create invitation with a single API call
 - 🏗️ **Framework agnostic**: Works with any Ecto-based application
 - 🤝 **Flexible usage tracking**: For tracking invitation link usage
-- ⏰ **Expiration management**: Extend, set, or remove expiration dates from invitations
+- ⏰ **Expiration management**: Extend or set expiration dates for invitations, or create never-expiring invitations
 
 ## What's planned?
+- [x] Invitations with no expiration date.
 - [ ] Auto-cleanup of expired invitations.
 - [ ] More advanced usage tracking.
-   - [ ] Metadata about those who visited and used the invitation (approx. location, user agent, etc.).
    - [x] Linking invitation tokens to user accounts (e.g. to track which user registered with which invitation): Added in v0.3.0.
+   - [ ] Metadata about those who visited and used the invitation (approx. location, user agent, etc.).
 - [ ] Invitation expiration after X number of uses (including one-time use links).
 - [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Descriptions for invitation links so you can provide context for its usage.
@@ -42,7 +43,7 @@ Add `usher` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.3.0"}
+    {:usher, "~> 0.4.0"}
   ]
 end
 ```

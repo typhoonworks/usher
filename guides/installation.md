@@ -16,7 +16,7 @@ Add `usher` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.1.0"}
+    {:usher, "~> 0.4.0"}
   ]
 end
 ```
@@ -45,7 +45,7 @@ Otherwise, you can use `Jason` as your JSON library. Add it to your dependencies
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.1.0"},
+    {:usher, "~> 0.4.0"},
     {:jason, "~> 1.4"}
   ]
 end
