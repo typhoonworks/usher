@@ -63,7 +63,8 @@ defmodule Usher.TestFixtures do
   def never_expiring_invitation_fixture(attrs \\ %{}) do
     attrs =
       Enum.into(attrs, %{
-        token: "never_expires_" <> (System.unique_integer([:positive, :monotonic]) |> to_string()),
+        token:
+          "never_expires_" <> (System.unique_integer([:positive, :monotonic]) |> to_string()),
         name: "Never Expiring Invitation",
         expires_at: nil
       })
