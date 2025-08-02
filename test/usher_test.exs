@@ -291,9 +291,10 @@ defmodule UsherTest do
 
       assert {:ok, updated_invitation} = Usher.extend_invitation_expiration(invitation, {7, :day})
 
-      assert DateTime.compare(updated_invitation.expires_at, original_expires_at) == :gt
       expected_expires_at = DateTime.add(original_expires_at, 7, :day)
       assert DateTime.compare(updated_invitation.expires_at, expected_expires_at) == :eq
+      # Verify it's now in the future
+      assert DateTime.compare(updated_invitation.expires_at, DateTime.utc_now()) == :gt
     end
 
     test "extends expired invitation" do
@@ -303,7 +304,6 @@ defmodule UsherTest do
       assert {:ok, updated_invitation} =
                Usher.extend_invitation_expiration(invitation, {25, :hour})
 
-      assert DateTime.compare(updated_invitation.expires_at, original_expires_at) == :gt
       expected_expires_at = DateTime.add(original_expires_at, 25, :hour)
       assert DateTime.compare(updated_invitation.expires_at, expected_expires_at) == :eq
       # Verify it's now in the future
