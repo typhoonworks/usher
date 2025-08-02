@@ -25,13 +25,17 @@ defmodule Usher.Migrations.V04 do
     # In rollback, set a default expiration for any NULL values
     # before making the column non-nullable again
     execute("""
-    UPDATE usher_invitations 
-    SET expires_at = NOW() + INTERVAL '7 days' 
+    UPDATE usher_invitations
+    SET expires_at = NOW() + INTERVAL '7 days'
     WHERE expires_at IS NULL
     """)
 
     alter table(:usher_invitations, table_opts) do
       modify(:expires_at, :utc_datetime, null: false)
     end
+
+    # Revert version comment
+    prefix = Keyword.get(opts, :prefix, "public")
+    execute("COMMENT ON TABLE #{prefix}.usher_invitations IS 'v03'")
   end
 end
