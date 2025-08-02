@@ -46,7 +46,7 @@ defmodule UsherTest do
     end
 
     test "returns {:error, :invalid_token} for nonexistent token" do
-      assert {:error, :invalid_token} = Usher.validate_invitation_token("nonexistent")
+      assert {:error, :not_found} = Usher.validate_invitation_token("nonexistent")
     end
 
     test "returns {:error, :invitation_expired} for expired token" do
@@ -281,6 +281,136 @@ defmodule UsherTest do
       assert Usher.entity_used_invitation?(invitation, "user", "123")
       assert Usher.entity_used_invitation?(invitation, "user", "123", "visited")
       refute Usher.entity_used_invitation?(invitation, "user", "123", "registered")
+    end
+  end
+
+  describe "extend_invitation_expiration/2" do
+    test "extends invitation with existing expiration" do
+      invitation = invitation_fixture()
+      original_expires_at = invitation.expires_at
+
+      assert {:ok, updated_invitation} = Usher.extend_invitation_expiration(invitation, {7, :day})
+
+      assert DateTime.compare(updated_invitation.expires_at, original_expires_at) == :gt
+      expected_expires_at = DateTime.add(original_expires_at, 7, :day)
+      assert DateTime.compare(updated_invitation.expires_at, expected_expires_at) == :eq
+    end
+
+    test "extends expired invitation" do
+      invitation = expired_invitation_fixture()
+      original_expires_at = invitation.expires_at
+
+      assert {:ok, updated_invitation} =
+               Usher.extend_invitation_expiration(invitation, {25, :hour})
+
+      assert DateTime.compare(updated_invitation.expires_at, original_expires_at) == :gt
+      expected_expires_at = DateTime.add(original_expires_at, 25, :hour)
+      assert DateTime.compare(updated_invitation.expires_at, expected_expires_at) == :eq
+      # Verify it's now in the future
+      assert DateTime.compare(updated_invitation.expires_at, DateTime.utc_now()) == :gt
+    end
+
+    test "fails to extend never-expiring invitation" do
+      invitation = never_expiring_invitation_fixture()
+
+      assert {:error, :no_expiration_to_extend} =
+               Usher.extend_invitation_expiration(invitation, {1, :week})
+    end
+
+    test "validates positive duration amounts" do
+      invitation = invitation_fixture()
+
+      assert_raise FunctionClauseError, fn ->
+        Usher.extend_invitation_expiration(invitation, {0, :day})
+      end
+
+      assert_raise FunctionClauseError, fn ->
+        Usher.extend_invitation_expiration(invitation, {-1, :day})
+      end
+    end
+  end
+
+  describe "set_invitation_expiration/2" do
+    test "sets specific expiration date" do
+      invitation = invitation_fixture()
+      target_date = ~U[2025-12-31 23:59:59Z]
+
+      assert {:ok, updated_invitation} = Usher.set_invitation_expiration(invitation, target_date)
+
+      assert updated_invitation.expires_at == target_date
+    end
+
+    test "sets expiration on never-expiring invitation" do
+      invitation = never_expiring_invitation_fixture()
+      target_date = DateTime.add(DateTime.utc_now(), 30, :day) |> DateTime.truncate(:second)
+
+      assert {:ok, updated_invitation} = Usher.set_invitation_expiration(invitation, target_date)
+
+      assert updated_invitation.expires_at == target_date
+    end
+
+    test "sets expiration on expired invitation" do
+      invitation = expired_invitation_fixture()
+      target_date = DateTime.add(DateTime.utc_now(), 1, :hour) |> DateTime.truncate(:second)
+
+      assert {:ok, updated_invitation} = Usher.set_invitation_expiration(invitation, target_date)
+
+      assert updated_invitation.expires_at == target_date
+    end
+
+    test "fails with invalid changeset for past date" do
+      invitation = invitation_fixture()
+      past_date = DateTime.add(DateTime.utc_now(), -1, :day)
+
+      assert {:error, changeset} = Usher.set_invitation_expiration(invitation, past_date)
+      assert "must be in the future" in errors_on(changeset).expires_at
+    end
+  end
+
+  describe "remove_invitation_expiration/1" do
+    test "removes expiration from invitation" do
+      invitation = invitation_fixture()
+
+      assert {:ok, updated_invitation} = Usher.remove_invitation_expiration(invitation)
+
+      assert updated_invitation.expires_at == nil
+    end
+
+    test "removes expiration from expired invitation" do
+      invitation = expired_invitation_fixture()
+
+      assert {:ok, updated_invitation} = Usher.remove_invitation_expiration(invitation)
+
+      assert updated_invitation.expires_at == nil
+    end
+
+    test "works on already never-expiring invitation" do
+      invitation = never_expiring_invitation_fixture()
+
+      assert {:ok, updated_invitation} = Usher.remove_invitation_expiration(invitation)
+
+      assert updated_invitation.expires_at == nil
+    end
+  end
+
+  describe "validate_invitation_token/1 with never-expiring invitations" do
+    test "validates never-expiring invitation token" do
+      invitation = never_expiring_invitation_fixture()
+
+      assert {:ok, ^invitation} = Usher.validate_invitation_token(invitation.token)
+    end
+
+    test "validates expired invitation after removing expiration" do
+      invitation = expired_invitation_fixture()
+
+      # Should be expired initially
+      assert {:error, :invitation_expired} = Usher.validate_invitation_token(invitation.token)
+
+      # Remove expiration
+      {:ok, updated_invitation} = Usher.remove_invitation_expiration(invitation)
+
+      # Should now be valid
+      assert {:ok, ^updated_invitation} = Usher.validate_invitation_token(invitation.token)
     end
   end
 end

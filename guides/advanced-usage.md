@@ -2,6 +2,118 @@
 
 This guide covers advanced patterns and techniques for using Usher in production applications.
 
+## Invitation Expiration Management
+
+Usher provides flexible expiration management capabilities, allowing you to extend, modify, or remove expiration dates from invitations.
+
+### Extending Existing Expiration Dates
+
+Use `Usher.extend_invitation_expiration/2` to add time to an existing expiration date:
+
+```elixir
+# Extend an invitation by 7 days
+{:ok, invitation} = Usher.extend_invitation_expiration(invitation, {7, :day})
+
+# Extend by 2 hours
+{:ok, invitation} = Usher.extend_invitation_expiration(invitation, {2, :hour})
+
+# Works with expired invitations too
+expired_invitation = Usher.get_invitation!("some-id")
+{:ok, renewed_invitation} = Usher.extend_invitation_expiration(expired_invitation, {30, :day})
+```
+
+**Note:** This function only works with invitations that already have an expiration date. For never-expiring invitations, use `Usher.set_invitation_expiration/2`.
+
+### Setting Specific Expiration Dates
+
+Use `Usher.set_invitation_expiration/2` to set a specific expiration date:
+
+```elixir
+# Set a specific date
+future_date = ~U[2025-12-31 23:59:59Z]
+{:ok, invitation} = Usher.set_invitation_expiration(invitation, future_date)
+
+# Set expiration to 30 days from now
+future_date = DateTime.add(DateTime.utc_now(), 30, :day)
+{:ok, invitation} = Usher.set_invitation_expiration(invitation, future_date)
+
+# Works with any invitation, including never-expiring ones
+future_date = DateTime.add(DateTime.utc_now(), 1, :week)
+{:ok, invitation} = Usher.set_invitation_expiration(never_expiring_invitation, future_date)
+```
+
+### Creating Never-Expiring Invitations
+
+Use `Usher.remove_invitation_expiration/1` to make invitations permanent:
+
+```elixir
+# Remove expiration from any invitation
+{:ok, permanent_invitation} = Usher.remove_invitation_expiration(invitation)
+
+# Now the invitation will never expire
+{:ok, validated_invitation} = Usher.validate_invitation_token(permanent_invitation.token)
+```
+
+You can also create never-expiring invitations directly:
+
+```elixir
+{:ok, invitation} = Usher.create_invitation(%{
+  name: "Permanent Team Invitation", 
+  expires_at: nil
+})
+```
+
+### Expiration Management Strategies
+
+#### 1. Dynamic Expiration Based on Usage
+
+Extend invitations based on their usage patterns:
+
+```elixir
+defmodule MyApp.AdaptiveInvitations do
+  def extend_if_active(invitation) do
+    recent_usage_count = 
+      invitation
+      |> Usher.list_invitation_usages(action: :visited)
+      |> filter_recent_usages()
+      |> Enum.count()
+    
+    if recent_usage_count > 5 do
+      Usher.extend_invitation_expiration(invitation, {14, :day})
+    else
+      {:ok, invitation}
+    end
+  end
+
+  def filter_recent_usages(invitation_usages) do
+    cutoff_date = DateTime.utc_now() |> DateTime.add(-7, :day)
+
+    Enum.filter(invitation_usages, fn invitation_usage ->
+      case DateTime.compare(invitation_usage.inserted_at, cutoff_date) do
+        :gt -> true
+        _ -> false
+      end
+    end)
+  end
+end
+```
+
+#### 2. Conditional Expiration Removal
+
+Make invitations permanent based on criteria:
+
+```elixir
+defmodule MyApp.PremiumInvitations do
+  def upgrade_to_permanent(invitation, user) do
+    if User.premium_account?(user) do
+      Usher.remove_invitation_expiration(invitation)
+    else
+      {:ok, invitation}
+    end
+  end
+end
+```
+
 ## Invitation Cleanup Strategies
 
 While Usher doesn't include built-in cleanup functionality, you can implement cleanup strategies to manage expired invitations.

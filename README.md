@@ -16,9 +16,10 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 >🚧 This library is in its infancy so you should treat all versions as early pre-release versions. We'll make the best effort to give heads up about breaking changes; however we can't guarantee backwards compatibility for every change.
 
 ## Current Features
-- 🔐 **Token generation**: using cryptographic functions
-- 🏗️ **Framework agnostic** - works with any Ecto-based application
-- 🤝 **Flexible usage tracking** for tracking invitation link usage
+- 🔐 **Token generation**: Create invitation with a single API call
+- 🏗️ **Framework agnostic**: Works with any Ecto-based application
+- 🤝 **Flexible usage tracking**: For tracking invitation link usage
+- ⏰ **Expiration management**: Extend, set, or remove expiration dates from invitations
 
 ## What's planned?
 - [ ] Auto-cleanup of expired invitations.

@@ -37,8 +37,8 @@ defmodule Usher.Migration do
 
   alias Usher.Config
 
-  @latest_version "v03"
-  @all_versions ["v01", "v02", "v03"]
+  @latest_version "v04"
+  @all_versions ["v01", "v02", "v03", "v04"]
   @invitations_table_name "usher_invitations"
 
   @doc """

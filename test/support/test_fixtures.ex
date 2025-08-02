@@ -58,6 +58,22 @@ defmodule Usher.TestFixtures do
   end
 
   @doc """
+  Generate a never-expiring invitation.
+  """
+  def never_expiring_invitation_fixture(attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        token: "never_expires_" <> (System.unique_integer([:positive]) |> to_string()),
+        name: "Never Expiring Invitation",
+        expires_at: nil
+      })
+
+    %Invitation{}
+    |> Invitation.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  @doc """
   Generate an invitation usage record.
   """
   def invitation_usage_fixture(invitation \\ nil, attrs \\ %{}) do

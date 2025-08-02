@@ -13,7 +13,7 @@ defmodule Usher.Invitation do
           id: Ecto.UUID.t(),
           token: String.t(),
           name: String.t() | nil,
-          expires_at: DateTime.t(),
+          expires_at: DateTime.t() | nil,
           usages: [Usher.InvitationUsage.t()] | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
@@ -56,7 +56,7 @@ defmodule Usher.Invitation do
   def changeset(invitation, attrs, opts \\ []) do
     invitation
     |> cast(attrs, [:token, :name, :expires_at])
-    |> validate_required([:token, :expires_at])
+    |> validate_required([:token])
     |> validate_name_if_required(opts)
     |> validate_future_date(:expires_at)
     |> unique_constraint(:token, name: :usher_invitations_token_index)
@@ -73,11 +73,15 @@ defmodule Usher.Invitation do
   end
 
   defp validate_future_date(changeset, field) do
-    validate_change(changeset, field, fn field, value ->
-      case DateTime.compare(value, DateTime.utc_now()) do
-        :gt -> []
-        _ -> [{field, "must be in the future"}]
-      end
+    validate_change(changeset, field, fn
+      field, %DateTime{} = datetime ->
+        case DateTime.compare(datetime, DateTime.utc_now()) do
+          :gt -> []
+          _ -> [{field, "must be in the future"}]
+        end
+
+      _field, nil ->
+        []
     end)
   end
 end

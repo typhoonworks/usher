@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Migration Guide
+
+**Database Migration Required:**
+
+For existing installations, create a new migration to enable expiration extension features:
+
+```bash
+mix ecto.gen.migration upgrade_usher_tables_v04
+```
+
+```elixir
+defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV04 do
+  use Ecto.Migration
+
+  def change do
+    Usher.Migration.migrate_to_version("v04")
+  end
+end
+```
+This migration makes the `expires_at` column nullable to support never-expiring invitations.
+
+### Added
+- **Invitation Expiration/Extension System**: Added ability to extend, set, or remove expiration dates from invitations
+- New API functions:
+  - `Usher.extend_invitation_expiration/2` - Extend existing invitation expiration by given duration
+  - `Usher.set_invitation_expiration/2` - Set specific expiration DateTime for an invitation
+  - `Usher.remove_invitation_expiration/1` - Remove expiration to make an invitation never expire
+- Database migration `Usher.Migrations.V04` to make `expires_at` column nullable
+
+### Changed
+- `Usher.Invitation` schema now allows `nil` for `expires_at` field to support never-expiring invitations
+- `Usher.validate_invitation_token/1` now treats invitations with `nil` `expires_at` as valid (never expire)
+
 ## [0.3.1] - 2025-07-22
 
 ### Fixed
