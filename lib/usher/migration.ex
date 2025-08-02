@@ -61,20 +61,6 @@ defmodule Usher.Migration do
   def all_versions, do: @all_versions
 
   @doc """
-  Migrates the Usher tables to the latest version.
-
-  This function is deprecated because it cannot be used more than once
-  in your migration files. Use `migrate_to_version/1` instead to specify
-  the exact version you want to migrate to.
-
-  See the CHANGELOG for details on breaking changes.
-  """
-  @deprecated "Use `migrate_to_version/1` instead for migrations"
-  def migrate_to_latest(_opts \\ []) do
-    migrate_to_version("v02")
-  end
-
-  @doc """
   Migrates the Usher tables to a specific version.
 
   This function automatically detects the current migration version and applies
