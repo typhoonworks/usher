@@ -103,16 +103,18 @@ defmodule Usher do
       {:error, :invalid_token}
   """
   def validate_invitation_token(token) do
-    case get_invitation_by_token(token) do
-      {:ok, invitation} ->
-        if DateTime.compare(invitation.expires_at, DateTime.utc_now()) == :gt do
-          {:ok, invitation}
-        else
-          {:error, :invitation_expired}
-        end
+    with {:ok, invitation} <- get_invitation_by_token(token),
+         :ok <- check_expiration(invitation.expires_at) do
+      {:ok, invitation}
+    end
+  end
 
-      {:error, :not_found} ->
-        {:error, :invalid_token}
+  defp check_expiration(nil), do: :ok
+
+  defp check_expiration(expires_at) do
+    case DateTime.compare(expires_at, DateTime.utc_now()) do
+      :gt -> :ok
+      _ -> {:error, :invitation_expired}
     end
   end
 
@@ -151,6 +153,105 @@ defmodule Usher do
   """
   def change_invitation(%Invitation{} = invitation, attrs \\ %{}, opts \\ []) do
     Invitation.changeset(invitation, attrs, opts)
+  end
+
+  @doc """
+  Extends the expiration of an invitation by the given duration.
+
+  Only works with invitations that already have an expiration date.
+  Returns an error if the invitation has no expiration date (nil).
+
+  ## Parameters
+
+    * `invitation` - The invitation struct to extend
+    * `duration` - A tuple like `{7, :day}` or `{2, :hour}`
+
+  ## Examples
+
+      # Extend an invitation by 7 days
+      iex> Usher.extend_invitation_expiration(invitation, {7, :day})
+      {:ok, %Usher.Invitation{expires_at: ~U[...]}}
+
+      # Extend an expired invitation by 2 hours
+      iex> Usher.extend_invitation_expiration(expired_invitation, {2, :hour})
+      {:ok, %Usher.Invitation{expires_at: ~U[...]}}
+
+      # Try to extend a never-expiring invitation
+      iex> Usher.extend_invitation_expiration(never_expiring_invitation, {1, :week})
+      {:error, :no_expiration_to_extend}
+  """
+  @spec extend_invitation_expiration(Invitation.t(), {pos_integer(), Config.duration_unit_pair()}) ::
+          {:ok, Invitation.t()} | {:error, Ecto.Changeset.t() | :no_expiration_to_extend}
+  def extend_invitation_expiration(
+        %Invitation{expires_at: %DateTime{}} = invitation,
+        {amount, unit}
+      )
+      when is_integer(amount) and amount > 0 and is_atom(unit) do
+    new_expires_at = DateTime.add(invitation.expires_at, amount, unit)
+
+    invitation
+    |> Invitation.changeset(%{expires_at: new_expires_at})
+    |> Config.repo().update()
+  end
+
+  def extend_invitation_expiration(%Invitation{expires_at: nil}, _duration) do
+    {:error, :no_expiration_to_extend}
+  end
+
+  @doc """
+  Sets a specific expiration date for an invitation.
+
+  Works with any invitation, regardless of current expiration state.
+
+  ## Parameters
+
+    * `invitation` - The invitation struct to update
+    * `expires_at` - A `DateTime` struct for the new expiration date
+
+  ## Examples
+
+      # Set a specific expiration date
+      iex> Usher.set_invitation_expiration(invitation, ~U[2025-12-31 23:59:59Z])
+      {:ok, %Usher.Invitation{expires_at: ~U[2025-12-31 23:59:59Z]}}
+
+      # Set expiration to 30 days from now
+      iex> future_date = DateTime.add(DateTime.utc_now(), 30, :day)
+      iex> Usher.set_invitation_expiration(invitation, future_date)
+      {:ok, %Usher.Invitation{expires_at: future_date}}
+  """
+  @spec set_invitation_expiration(Invitation.t(), DateTime.t()) ::
+          {:ok, Invitation.t()} | {:error, Ecto.Changeset.t()}
+  def set_invitation_expiration(%Invitation{} = invitation, %DateTime{} = expires_at) do
+    invitation
+    |> Invitation.changeset(%{expires_at: expires_at})
+    |> Config.repo().update()
+  end
+
+  @doc """
+  Removes the expiration from an invitation, making it never expire.
+
+  Sets the expires_at field to nil, effectively creating a permanent invitation link.
+
+  ## Parameters
+
+    * `invitation` - The invitation struct to update
+
+  ## Examples
+
+      # Make an invitation never expire
+      iex> Usher.remove_invitation_expiration(invitation)
+      {:ok, %Usher.Invitation{expires_at: nil}}
+
+      # Remove expiration from an already expired invitation
+      iex> Usher.remove_invitation_expiration(expired_invitation)
+      {:ok, %Usher.Invitation{expires_at: nil}}
+  """
+  @spec remove_invitation_expiration(Invitation.t()) ::
+          {:ok, Invitation.t()} | {:error, Ecto.Changeset.t()}
+  def remove_invitation_expiration(%Invitation{} = invitation) do
+    invitation
+    |> Invitation.changeset(%{expires_at: nil})
+    |> Config.repo().update()
   end
 
   @doc """

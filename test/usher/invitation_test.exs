@@ -34,14 +34,14 @@ defmodule Usher.InvitationTest do
       assert "can't be blank" in errors_on(changeset).token
     end
 
-    test "invalid changeset without expires_at" do
+    test "valid changeset without expires_at (never-expiring invitation)" do
       changeset =
         Invitation.changeset(%Invitation{}, %{
-          token: "valid_token"
+          token: "valid_token",
+          name: "Never Expiring Invitation"
         })
 
-      refute changeset.valid?
-      assert "can't be blank" in errors_on(changeset).expires_at
+      assert changeset.valid?
     end
 
     test "invalid changeset with past expiration date" do

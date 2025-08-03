@@ -62,6 +62,21 @@ IO.inspect(invitation.expires_at) # => ~U[2024-01-15 10:30:00Z]
 })
 ```
 
+### Creating Never-Expiring Invitations
+
+You can create invitations that never expire by setting `expires_at` to `nil`:
+
+```elixir
+# Create a permanent invitation
+{:ok, invitation} = Usher.create_invitation(%{
+  name: "Permanent Team Invitation",
+  expires_at: nil
+})
+
+# This invitation will never expire and will always validate successfully
+{:ok, validated} = Usher.validate_invitation_token(invitation.token)
+```
+
 ### Validating Invitations
 
 When users visit your application with an invitation token, validate it:

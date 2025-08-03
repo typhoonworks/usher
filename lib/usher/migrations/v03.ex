@@ -45,5 +45,9 @@ defmodule Usher.Migrations.V03 do
     alter table(:usher_invitations) do
       add(:joined_count, :integer, default: 0, null: false)
     end
+
+    # Revert version comment
+    prefix = Keyword.get(opts, :prefix, "public")
+    execute("COMMENT ON TABLE #{prefix}.usher_invitations IS 'v02'")
   end
 end

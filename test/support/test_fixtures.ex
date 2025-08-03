@@ -11,7 +11,7 @@ defmodule Usher.TestFixtures do
   def invitation_fixture(attrs \\ %{}) do
     attrs =
       Enum.into(attrs, %{
-        token: "test_token_" <> (System.unique_integer([:positive]) |> to_string()),
+        token: "test_token_" <> (System.unique_integer([:positive, :monotonic]) |> to_string()),
         name: "Test Invitation",
         expires_at: DateTime.add(DateTime.utc_now(), 7, :day)
       })
@@ -58,6 +58,23 @@ defmodule Usher.TestFixtures do
   end
 
   @doc """
+  Generate a never-expiring invitation.
+  """
+  def never_expiring_invitation_fixture(attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        token:
+          "never_expires_" <> (System.unique_integer([:positive, :monotonic]) |> to_string()),
+        name: "Never Expiring Invitation",
+        expires_at: nil
+      })
+
+    %Invitation{}
+    |> Invitation.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  @doc """
   Generate an invitation usage record.
   """
   def invitation_usage_fixture(invitation \\ nil, attrs \\ %{}) do
@@ -67,7 +84,7 @@ defmodule Usher.TestFixtures do
       Enum.into(attrs, %{
         invitation_id: invitation.id,
         entity_type: :user,
-        entity_id: "test_entity_#{System.unique_integer([:positive])}",
+        entity_id: "test_entity_#{System.unique_integer([:positive, :monotonic])}",
         action: :registered,
         metadata: %{}
       })

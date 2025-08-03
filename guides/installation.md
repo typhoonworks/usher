@@ -16,7 +16,7 @@ Add `usher` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.1.0"}
+    {:usher, "~> 0.4.0"}
   ]
 end
 ```
@@ -45,7 +45,7 @@ Otherwise, you can use `Jason` as your JSON library. Add it to your dependencies
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.1.0"},
+    {:usher, "~> 0.4.0"},
     {:jason, "~> 1.4"}
   ]
 end
@@ -66,17 +66,27 @@ mix ecto.gen.migration install_usher_tables
 
 ### 3. Add Migration Content
 
-Add the Usher schema to your migration file:
+Add the Usher schema to your migration file.
+
+**For first-time installations:**
 
 ```elixir
 defmodule MyApp.Repo.Migrations.InstallUsherTables do
   use Ecto.Migration
 
-  def change do
-    Usher.Migration.migrate_to_version("v03")
+  def up do
+    Usher.Migration.migrate_to_version("v04")  # Latest version
+  end
+
+  def down do
+    Usher.Migration.migrate_to_version("v01")  # First version
   end
 end
 ```
+
+**For existing installations upgrading to a new version:**
+
+Check the [CHANGELOG.md](../CHANGELOG.md) for migration instructions specific to your current version. Each release includes detailed migration guides with the required database changes.
 
 ### 4. Run Migration
 

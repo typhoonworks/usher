@@ -15,10 +15,13 @@ defmodule Usher.Migration do
 
       defmodule MyApp.Repo.Migrations.CreateUsherInvitations do
         use Ecto.Migration
-        import Usher.Migration
 
-        def change do
-          migrate_to_version("v03")
+        def up do
+          Usher.Migration.migrate_to_version("v04")
+        end
+
+        def down do
+          Usher.Migration.migrate_to_version("v01")
         end
       end
 
@@ -28,8 +31,12 @@ defmodule Usher.Migration do
         use Ecto.Migration
         import Usher.Migration
 
-        def change do
-          migrate_to_version("v03")
+        def up do
+          Usher.Migration.migrate_to_version("v04")
+        end
+
+        def down do
+          Usher.Migration.migrate_to_version("v03")
         end
       end
   """
@@ -37,8 +44,8 @@ defmodule Usher.Migration do
 
   alias Usher.Config
 
-  @latest_version "v03"
-  @all_versions ["v01", "v02", "v03"]
+  @latest_version "v04"
+  @all_versions ["v01", "v02", "v03", "v04"]
   @invitations_table_name "usher_invitations"
 
   @doc """
@@ -52,20 +59,6 @@ defmodule Usher.Migration do
   """
   @spec all_versions() :: [String.t()]
   def all_versions, do: @all_versions
-
-  @doc """
-  Migrates the Usher tables to the latest version.
-
-  This function is deprecated because it cannot be used more than once
-  in your migration files. Use `migrate_to_version/1` instead to specify
-  the exact version you want to migrate to.
-
-  See the CHANGELOG for details on breaking changes.
-  """
-  @deprecated "Use `migrate_to_version/1` instead for migrations"
-  def migrate_to_latest(_opts \\ []) do
-    migrate_to_version("v02")
-  end
 
   @doc """
   Migrates the Usher tables to a specific version.
@@ -83,72 +76,105 @@ defmodule Usher.Migration do
       migrate_to_version("v03")
   """
   @spec migrate_to_version(String.t()) :: no_return()
-  def migrate_to_version(version) do
-    if version not in @all_versions do
+  def migrate_to_version(to_version) do
+    if to_version not in @all_versions do
       raise ArgumentError,
-            "Invalid migration version: #{version}. Valid versions are: #{@all_versions}"
+            "Invalid migration version: #{to_version}. Valid versions are: #{@all_versions}"
     end
 
     current_version = get_current_version()
+    to_version = version_string_to_integer(to_version)
 
-    if current_version == version do
+    if current_version == to_version do
       :ok
     else
-      apply_migrations_from_to(current_version, version)
+      apply_migrations_from_to(current_version, to_version)
     end
   end
 
   defp get_current_version(opts \\ []) do
     prefix = Keyword.get(opts, :prefix, "public")
 
-    case usher_repo().query(
-           "SELECT obj_description(oid) FROM pg_class WHERE relname = '#{@invitations_table_name}' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '#{prefix}')"
-         ) do
+    case query_table_version(prefix) do
+      version when version in @all_versions ->
+        version_string_to_integer(version)
+
+      "legacy" ->
+        1
+
+      nil ->
+        0
+    end
+  end
+
+  defp query_table_version(prefix) do
+    table_comment =
+      usher_repo().query("""
+      SELECT obj_description(oid)
+      FROM pg_class
+      WHERE relname = '#{@invitations_table_name}'
+        AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '#{prefix}')
+      """)
+
+    case table_comment do
       {:ok, %{rows: [[version]]}} when is_binary(version) -> version
-      {:ok, %{rows: [[nil]]}} -> check_legacy_table(opts)
-      {:ok, %{rows: []}} -> nil
-      _ -> nil
+      {:ok, %{rows: []}} -> check_legacy_table(prefix)
     end
   end
 
   # Check if table exists but has no version comment (legacy installation)
-  defp check_legacy_table(opts) do
-    prefix = Keyword.get(opts, :prefix, "public")
+  defp check_legacy_table(prefix) do
+    legacy_table_exists =
+      usher_repo().query("""
+      SELECT EXISTS
+      (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_name = '#{@invitations_table_name}'
+          AND table_schema = '#{prefix}'
+      )
+      """)
 
-    case usher_repo().query(
-           "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '#{@invitations_table_name}' AND table_schema = '#{prefix}')"
-         ) do
+    case legacy_table_exists do
       {:ok, %{rows: [[true]]}} -> "legacy"
       _ -> nil
     end
   end
 
-  defp apply_migrations_from_to(from_version, to_version, opts \\ []) do
-    versions = get_migration_path(from_version, to_version)
+  defp apply_migrations_from_to(from_version, to_version, opts \\ [])
+
+  defp apply_migrations_from_to(from_version, to_version, opts)
+       when from_version < to_version do
+    all_versions = Enum.map(@all_versions, &version_string_to_integer/1)
+
+    start_index = Enum.find_index(all_versions, &(&1 == from_version + 1))
+    end_index = Enum.find_index(all_versions, &(&1 == to_version))
+    versions = Enum.slice(all_versions, start_index..end_index)
 
     Enum.each(versions, fn version ->
-      migration_module = Module.concat([Usher.Migrations, String.upcase(version)])
+      migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
       migration_module.up(opts)
     end)
   end
 
-  @doc false
-  def get_migration_path(from_version, to_version) do
-    start_index =
-      case from_version do
-        nil -> 0
-        # Skip v01 for legacy installations
-        "legacy" -> 1
-        version -> Enum.find_index(@all_versions, &(&1 == version)) + 1
-      end
+  defp apply_migrations_from_to(from_version, to_version, opts)
+       when from_version > to_version do
+    all_versions = Enum.map(@all_versions, &version_string_to_integer/1)
 
-    end_index = Enum.find_index(@all_versions, &(&1 == to_version))
+    start_index = Enum.find_index(all_versions, &(&1 == from_version))
+    end_index = Enum.find_index(all_versions, &(&1 == to_version + 1))
+    versions = Enum.slice(all_versions, end_index..start_index) |> Enum.reverse()
 
-    if start_index <= end_index do
-      Enum.slice(@all_versions, start_index..end_index)
-    else
-      []
-    end
+    Enum.each(versions, fn version ->
+      migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
+      migration_module.down(opts)
+    end)
+  end
+
+  defp version_string_to_integer(version) when is_binary(version) do
+    "v" <> version_number = version
+
+    String.to_integer(version_number)
   end
 
   defp usher_repo, do: Config.repo()
