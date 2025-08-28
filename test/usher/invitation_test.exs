@@ -83,6 +83,7 @@ defmodule Usher.InvitationTest do
       assert changeset.valid?
     end
 
+    @tag :custom_attributes_embedded_schema
     test "valid changeset with arbitrary custom_attributes" do
       custom_attributes = %{
         role: :manager,

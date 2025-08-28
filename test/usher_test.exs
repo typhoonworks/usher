@@ -29,6 +29,7 @@ defmodule UsherTest do
       assert invitation.expires_at == expires_at
     end
 
+    @tag :custom_attributes_embedded_schema
     test "creates invitation with custom_attributes" do
       custom_attributes = %{
         role: :manager,

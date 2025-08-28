@@ -4,6 +4,8 @@ defmodule Usher.MixProject do
   @version "0.4.0"
   @source_url "https://github.com/typhoonworks/usher"
 
+  @test_environments [:test, :test_custom_attributes_embedded_schema]
+
   def project do
     [
       app: :usher,
@@ -24,7 +26,7 @@ defmodule Usher.MixProject do
   end
 
   def cli do
-    [preferred_envs: ["test.setup": :test, test: :test]]
+    [preferred_envs: ["test.setup": :test]]
   end
 
   def application do
@@ -33,6 +35,7 @@ defmodule Usher.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test_custom_attributes_embedded_schema), do: ["lib", "test/support"]
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -44,9 +47,9 @@ defmodule Usher.MixProject do
       {:postgrex, "~> 0.20", optional: true},
 
       # Development and testing dependencies
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
-      {:mimic, "~> 2.0", only: :test}
+      {:dialyxir, "~> 1.4", only: [:dev | @test_environments], runtime: false},
+      {:ex_doc, "~> 0.38", only: [:dev | @test_environments], runtime: false},
+      {:mimic, "~> 2.0", only: @test_environments}
     ]
   end
 

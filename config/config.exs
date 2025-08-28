@@ -16,11 +16,6 @@ config :usher,
       valid_usage_entity_types: [:user, :company, :device],
       valid_usage_actions: [:visited, :registered, :activated]
     }
-  },
-  schemas: %{
-    invitation: %{
-      custom_attributes_embedded_schema: Usher.CustomAttributesEmbeddedSchema
-    }
   }
 
 config :usher, Usher.Test.Repo,
@@ -36,3 +31,5 @@ config :usher, Usher.Test.Repo,
   stacktrace: true
 
 config :usher, ecto_repos: [Usher.Test.Repo]
+
+import_config "#{config_env()}.exs"

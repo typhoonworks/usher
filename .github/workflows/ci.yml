@@ -64,12 +64,24 @@ jobs:
 
       - run: mix format --check-formatted
 
-      - run: mix deps.compile
+      - name: Compile dependencies
+        run: mix deps.compile
 
-      - run: mix compile --warnings-as-errors
+      - name: Compile and test without custom attributes
+        env:
+          MIX_ENV: test
+        run: |
+          mix compile --warnings-as-errors
+          mix do ecto.create, ecto.migrate
+          mix test --exclude custom_attributes_embedded_schema
 
-      - run: mix do ecto.create, ecto.migrate
-
-      - run: mix test
+      - name: Clean and compile with custom attributes
+        env:
+          MIX_ENV: test_custom_attributes_embedded_schema
+        run: |
+          mix clean
+          mix compile --warnings-as-errors
+          mix do ecto.create, ecto.migrate
+          mix test --only custom_attributes_embedded_schema
 
       - run: mix dialyzer
