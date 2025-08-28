@@ -29,8 +29,25 @@ defmodule UsherTest do
       assert invitation.expires_at == expires_at
     end
 
+    test "creates invitation with custom_attributes as :map" do
+      custom_attributes = %{
+        role: :manager,
+        tags: ["marketing", "content"],
+        department: "Marketing"
+      }
+
+      assert {:ok, invitation} =
+               Usher.create_invitation(%{
+                 name: "Custom Invitation",
+                 token: "custom_token",
+                 custom_attributes: custom_attributes
+               })
+
+      assert invitation.custom_attributes == custom_attributes
+    end
+
     @tag :custom_attributes_embedded_schema
-    test "creates invitation with custom_attributes" do
+    test "creates invitation with custom_attributes as embedded schema" do
       custom_attributes = %{
         role: :manager,
         tags: ["marketing", "content"],
