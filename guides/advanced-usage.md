@@ -58,7 +58,7 @@ You can also create never-expiring invitations directly:
 
 ```elixir
 {:ok, invitation} = Usher.create_invitation(%{
-  name: "Permanent Team Invitation", 
+  name: "Permanent Team Invitation",
   expires_at: nil
 })
 ```
@@ -72,12 +72,12 @@ Extend invitations based on their usage patterns:
 ```elixir
 defmodule MyApp.AdaptiveInvitations do
   def extend_if_active(invitation) do
-    recent_usage_count = 
+    recent_usage_count =
       invitation
       |> Usher.list_invitation_usages(action: :visited)
       |> filter_recent_usages()
       |> Enum.count()
-    
+
     if recent_usage_count > 5 do
       Usher.extend_invitation_expiration(invitation, {14, :day})
     else
@@ -126,27 +126,27 @@ Create a reusable cleanup module:
 defmodule MyApp.InvitationCleanup do
   @moduledoc """
   A module for cleaning up expired invitations.
-  
+
   This can be used with a job scheduler like Oban or simply a GenServer
   to periodically remove expired invitations from the database.
   """
-  
+
   @doc """
   Removes expired invitations older than the given number of days.
-  
+
   This is useful if you want to keep recently expired invitations
   for debugging or analytics purposes.
   """
   def cleanup_old_expired_invitations(days_old \\ 30) do
     cutoff_date = DateTime.utc_now() |> DateTime.add(-days_old, :day)
-    
-    old_expired_invitations = 
+
+    old_expired_invitations =
       Usher.list_invitations()
       |> Enum.filter(fn invitation ->
         DateTime.compare(invitation.expires_at, cutoff_date) == :lt
       end)
-    
-    deleted_count = 
+
+    deleted_count =
       old_expired_invitations
       |> Enum.reduce(0, fn invitation, acc ->
         # Alternatively, you can use your application's repo to
@@ -156,7 +156,7 @@ defmodule MyApp.InvitationCleanup do
           {:error, _} -> acc
         end
       end)
-    
+
     deleted_count
   end
 end
@@ -221,12 +221,12 @@ For applications wanting a self-contained cleanup process:
 defmodule MyApp.InvitationCleanupCron do
   @moduledoc """
   A GenServer that periodically cleans up expired invitations.
-  
+
   Runs cleanup tasks at configurable intervals and can be
   added to your application's supervision tree.
   """
   use GenServer
-  
+
   require Logger
 
   # Default cleanup interval: 24 hours
@@ -236,41 +236,41 @@ defmodule MyApp.InvitationCleanupCron do
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
-  
+
   @impl GenServer
   def init(opts) do
     cleanup_interval = Keyword.get(opts, :cleanup_interval_ms, @default_cleanup_interval_ms)
     days_old = Keyword.get(opts, :days_old, @default_days_old)
 
     schedule_cleanup(cleanup_interval)
-    
+
     state = %{
       cleanup_interval: cleanup_interval,
       days_old: days_old,
       last_cleanup: nil
     }
-    
+
     Logger.info("InvitationCleanupCron started with #{cleanup_interval}ms interval")
     {:ok, state}
   end
-  
+
   @impl GenServer
   def handle_info(:cleanup, state) do
     deleted_count = MyApp.InvitationCleanup.cleanup_old_expired_invitations(state.days_old)
-    
+
     new_state = %{
-      state | 
+      state |
       last_cleanup: DateTime.utc_now()
     }
-    
+
     Logger.info("Cleanup completed. Deleted #{deleted_count} invitations.")
-    
+
     # Schedule the next cleanup
     schedule_cleanup(state.cleanup_interval)
-    
+
     {:noreply, new_state}
   end
-  
+
   defp schedule_cleanup(interval) do
     Process.send_after(self(), :cleanup, interval)
   end
@@ -282,7 +282,7 @@ Add to your application supervision tree:
 ```elixir
 defmodule MyApp.Application do
   use Application
-  
+
   def start(_type, _args) do
     children = [
       # ... other children
@@ -291,9 +291,108 @@ defmodule MyApp.Application do
         days_old: 14  # Delete invitations expired more than 14 days ago
       ]}
     ]
-    
+
     opts = [strategy: :one_for_one, name: MyApp.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+end
+```
+
+## Custom Attributes for Invitations
+
+Custom attributes allow defining attributes you can utilize after you validate an invitation. For example, you could utilize these attributes to determine the welcome message or the role a user should be assigned during account creation.
+
+### Example: Setting User Role upon Registration
+
+```elixir
+defmodule MyApp.RoleBasedInvitations do
+  def create_team_invitation(inviter, role, department) do
+    Usher.create_invitation(%{
+      name: "Join #{department} as #{role}",
+      custom_attributes: %{
+        invited_by: inviter.id,
+        role: role,
+        department: department,
+        permissions: get_default_permissions(role),
+        welcome_message: build_welcome_message(role, department)
+      }
+    })
+  end
+
+  def handle_registration(invitation_token, user_params) do
+    with {:ok, invitation} <- Usher.validate_invitation_token(invitation_token),
+         {:ok, user} <- create_user_from_invitation(invitation, user_params) do
+
+      # Track the registration
+      Usher.track_invitation_usage(invitation, :user, user.id, :registered)
+
+      {:ok, user}
+    end
+  end
+
+  defp create_user_from_invitation(invitation, user_params) do
+    attrs = Map.take(
+      invitation.custom_attributes,
+      [:role, :department, :permissions, :invited_by]
+    )
+
+    MyApp.Accounts.create_user(attrs)
+  end
+end
+```
+
+### Example: Campaign Tracking Integration
+
+Use custom attributes for marketing campaign tracking:
+
+```elixir
+defmodule MyApp.CampaignInvitations do
+  def create_campaign_invitation(campaign_params) do
+    Usher.create_invitation(%{
+      name: campaign_params.subject,
+      custom_attributes: %{
+        campaign_id: campaign_params.campaign_id,
+        campaign_name: campaign_params.campaign_name,
+        utm_source: campaign_params.utm_source,
+        utm_medium: campaign_params.utm_medium,
+        utm_campaign: campaign_params.utm_campaign,
+        landing_page: campaign_params.landing_page,
+        expected_conversion_action: campaign_params.conversion_action,
+        a_b_test_variant: campaign_params.ab_variant
+      }
+    })
+  end
+
+  def track_campaign_interaction(invitation_token, entity_id, action) do
+    with {:ok, invitation} <- Usher.validate_invitation_token(invitation_token) do
+
+      # Track the action with Usher
+      Usher.track_invitation_usage(invitation, :user, entity_id, action)
+
+      # Also send to your analytics service
+      send_to_analytics(invitation, entity_id, action)
+
+      {:ok, invitation}
+    end
+  end
+
+  defp send_to_analytics(invitation, entity_id, action) do
+    attrs = invitation.custom_attributes
+
+    analytics_event = %{
+      user_id: entity_id,
+      event: "invitation_#{action}",
+      properties: %{
+        campaign_id: attrs.campaign_id,
+        campaign_name: attrs.campaign_name,
+        utm_source: attrs.utm_source,
+        utm_medium: attrs.utm_medium,
+        utm_campaign: attrs.utm_campaign,
+        ab_variant: attrs.a_b_test_variant,
+      }
+    }
+
+    MyApp.Analytics.track_event(analytics_event)
   end
 end
 ```
@@ -310,7 +409,7 @@ defmodule MyApp.InvitationValidator do
       {:ok, invitation}
     end
   end
-  
+
   defp check_usage_limits(invitation, context) do
     max_uses = Map.get(context, :max_uses, 100)
 
@@ -318,7 +417,7 @@ defmodule MyApp.InvitationValidator do
       invitation
       |> Usher.list_invitation_usages_by_unique_entity(action: :joined)
       |> Enum.count()
-    
+
     if invitation_usage_count >= max_uses do
       {:error, :usage_limit_exceeded}
     else
