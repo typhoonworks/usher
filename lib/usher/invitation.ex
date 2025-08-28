@@ -26,6 +26,7 @@ defmodule Usher.Invitation do
     field(:token, :string)
     field(:name, :string)
     field(:expires_at, :utc_datetime)
+    field(:custom_attributes, :map)
 
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
@@ -55,7 +56,7 @@ defmodule Usher.Invitation do
   """
   def changeset(invitation, attrs, opts \\ []) do
     invitation
-    |> cast(attrs, [:token, :name, :expires_at])
+    |> cast(attrs, [:token, :name, :expires_at, :custom_attributes])
     |> validate_required([:token])
     |> validate_name_if_required(opts)
     |> validate_future_date(:expires_at)

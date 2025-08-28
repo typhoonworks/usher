@@ -12,7 +12,7 @@ defmodule UsherTest do
       assert String.length(invitation.token) == 16
     end
 
-    test "creates invitation with custom attributes" do
+    test "creates invitation with user-defined attributes" do
       expires_at =
         DateTime.utc_now()
         |> DateTime.add(30, :day)
@@ -27,6 +27,23 @@ defmodule UsherTest do
 
       assert invitation.token == "custom_token"
       assert invitation.expires_at == expires_at
+    end
+
+    test "creates invitation with custom_attributes" do
+      custom_attributes = %{
+        role: :manager,
+        tags: ["marketing", "content"],
+        department: "Marketing"
+      }
+
+      assert {:ok, invitation} =
+               Usher.create_invitation(%{
+                 name: "Custom Invitation",
+                 token: "custom_token",
+                 custom_attributes: custom_attributes
+               })
+
+      assert invitation.custom_attributes == custom_attributes
     end
 
     test "fails with duplicate token" do

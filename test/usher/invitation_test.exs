@@ -82,5 +82,26 @@ defmodule Usher.InvitationTest do
 
       assert changeset.valid?
     end
+
+    test "valid changeset with arbitrary custom_attributes" do
+      custom_attributes = %{
+        role: :manager,
+        tags: ["marketing", "content"],
+        department: "Marketing"
+      }
+
+      changeset =
+        Invitation.changeset(%Invitation{}, %{
+          name: "Test Invitation",
+          token: "valid_token",
+          expires_at: DateTime.add(DateTime.utc_now(), 1, :day),
+          custom_attributes: custom_attributes
+        })
+
+      assert changeset.valid?
+
+      assert is_map_key(changeset.changes, :custom_attributes)
+      assert changeset.changes.custom_attributes == custom_attributes
+    end
   end
 end
