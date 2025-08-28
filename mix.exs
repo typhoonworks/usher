@@ -26,7 +26,7 @@ defmodule Usher.MixProject do
   end
 
   def cli do
-    [preferred_envs: ["test.setup": :test]]
+    [preferred_envs: ["test.setup": :test, test: :test]]
   end
 
   def application do
@@ -55,6 +55,16 @@ defmodule Usher.MixProject do
 
   defp aliases do
     [
+      test: ["test --exclude custom_attributes_embedded_schema"],
+      "test.custom_attributes": [
+        fn _ ->
+          Mix.shell().cmd(
+            "mix test --only custom_attributes_embedded_schema",
+            env: [{"MIX_ENV", "test_custom_attributes_embedded_schema"}],
+            stderr_to_stdout: false
+          )
+        end
+      ],
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "test.setup": ["ecto.drop --quiet", "ecto.create", "ecto.migrate"],
