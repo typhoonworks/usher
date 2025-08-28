@@ -43,7 +43,10 @@ defmodule UsherTest do
                  custom_attributes: custom_attributes
                })
 
-      assert invitation.custom_attributes == custom_attributes
+      assert %Usher.CustomAttributesEmbeddedSchema{} =
+               actual_custom_attributes = invitation.custom_attributes
+
+      assert Map.from_struct(actual_custom_attributes) == custom_attributes
     end
 
     test "fails with duplicate token" do

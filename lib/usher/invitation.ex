@@ -9,6 +9,13 @@ defmodule Usher.Invitation do
   import Ecto.Changeset
   alias Usher.Config
 
+  @custom_attributes_type Application.compile_env(
+                            :usher,
+                            [:schemas, :invitation, :custom_attributes_embedded_schema]
+                          )
+
+  @permitted_fields [:token, :name, :expires_at]
+
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
           token: String.t(),
@@ -26,7 +33,12 @@ defmodule Usher.Invitation do
     field(:token, :string)
     field(:name, :string)
     field(:expires_at, :utc_datetime)
-    field(:custom_attributes, :map)
+
+    if @custom_attributes_type do
+      embeds_one(:custom_attributes, @custom_attributes_type)
+    else
+      field(:custom_attributes, :map)
+    end
 
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
@@ -56,7 +68,8 @@ defmodule Usher.Invitation do
   """
   def changeset(invitation, attrs, opts \\ []) do
     invitation
-    |> cast(attrs, [:token, :name, :expires_at, :custom_attributes])
+    |> cast(attrs, permitted_fields())
+    |> maybe_cast_embed()
     |> validate_required([:token])
     |> validate_name_if_required(opts)
     |> validate_future_date(:expires_at)
@@ -84,5 +97,24 @@ defmodule Usher.Invitation do
       _field, nil ->
         []
     end)
+  end
+
+  defp permitted_fields do
+    if @custom_attributes_type do
+      # When a custom attribute embedded schema is provided,
+      # we need to use `cast_embed/3` instead of adding :custom_attributes
+      # to the list of permitted fields for `cast/3`
+      @permitted_fields
+    else
+      [:custom_attributes | @permitted_fields]
+    end
+  end
+
+  defp maybe_cast_embed(changeset) do
+    if @custom_attributes_type do
+      cast_embed(changeset, :custom_attributes)
+    else
+      changeset
+    end
   end
 end

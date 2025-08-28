@@ -101,7 +101,7 @@ defmodule Usher.InvitationTest do
       assert changeset.valid?
 
       assert is_map_key(changeset.changes, :custom_attributes)
-      assert changeset.changes.custom_attributes == custom_attributes
+      assert changeset.changes.custom_attributes.valid?
     end
   end
 end
