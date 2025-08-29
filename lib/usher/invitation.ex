@@ -6,8 +6,19 @@ defmodule Usher.Invitation do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
+
   alias Usher.Config
+
+  # Disabled because Dialyzer only sees the default value returned from
+  # `Application.compile_env/3` called in `Usher.Config`, so it thinks
+  # the value of `@custom_attributes_type` can only be `:map`.
+  @dialyzer :no_match
+
+  @custom_attributes_type Config.custom_attributes_type()
+
+  @permitted_fields [:token, :name, :expires_at]
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -26,6 +37,12 @@ defmodule Usher.Invitation do
     field(:token, :string)
     field(:name, :string)
     field(:expires_at, :utc_datetime)
+
+    if @custom_attributes_type == :map do
+      field(:custom_attributes, :map)
+    else
+      embeds_one(:custom_attributes, @custom_attributes_type)
+    end
 
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
@@ -55,7 +72,8 @@ defmodule Usher.Invitation do
   """
   def changeset(invitation, attrs, opts \\ []) do
     invitation
-    |> cast(attrs, [:token, :name, :expires_at])
+    |> cast(attrs, permitted_fields())
+    |> maybe_cast_embed()
     |> validate_required([:token])
     |> validate_name_if_required(opts)
     |> validate_future_date(:expires_at)
@@ -83,5 +101,24 @@ defmodule Usher.Invitation do
       _field, nil ->
         []
     end)
+  end
+
+  defp permitted_fields do
+    if @custom_attributes_type == :map do
+      # When a custom attribute embedded schema is provided,
+      # we need to use `cast_embed/3` instead of adding :custom_attributes
+      # to the list of permitted fields for `cast/3`
+      [:custom_attributes | @permitted_fields]
+    else
+      @permitted_fields
+    end
+  end
+
+  defp maybe_cast_embed(changeset) do
+    if @custom_attributes_type == :map do
+      changeset
+    else
+      cast_embed(changeset, :custom_attributes)
+    end
   end
 end

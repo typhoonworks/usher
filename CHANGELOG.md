@@ -7,7 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-In a future release, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
+### Migration Guide
+
+**Database Migration Required:**
+
+For existing installations, create a new migration to add custom attributes support:
+
+```bash
+mix ecto.gen.migration upgrade_usher_tables_v05
+```
+
+```elixir
+defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV05 do
+  use Ecto.Migration
+
+  def up do
+    Usher.Migration.migrate_to_version("v05")
+  end
+
+  def down do
+    Usher.Migration.migrate_to_version("v04")
+  end
+end
+```
+
+This migration adds a `custom_attributes` field to the invitations table for storing additional invitation metadata.
+
+### Added
+- **Custom Attributes Support**: Added `custom_attributes` field to `Usher.Invitation` schema for storing custom attributes for use with the invitation (defaults to `:map` type)
+- **Configurable Custom Attributes Schema**: Added ability to configure embedded schema for custom attributes field via `config :usher, schemas: %{invitation: %{custom_attributes_type: YourSchema}}`
+- Database migration `Usher.Migrations.V05` to add the `custom_attributes` column
+- New test environment `test_custom_attributes_embedded_schema` for testing embedded schema configuration
+
+### Changed
+- Testing infrastructure with separate test environment for compile-time config values.
+
+Note: In a future release, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
 
 ## [0.4.0] - 2025-08-02
 

@@ -66,4 +66,15 @@ defmodule Usher.ConfigTest do
       assert Config.name_required?()
     end
   end
+
+  describe "custom_attributes_type/0" do
+    test "returns :map when not defined" do
+      assert Config.custom_attributes_type() == :map
+    end
+
+    @tag :custom_attributes_embedded_schema
+    test "returns module when defined with a module" do
+      assert Config.custom_attributes_type() == Usher.CustomAttributesEmbeddedSchema
+    end
+  end
 end

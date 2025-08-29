@@ -31,3 +31,5 @@ config :usher, Usher.Test.Repo,
   stacktrace: true
 
 config :usher, ecto_repos: [Usher.Test.Repo]
+
+import_config "#{config_env()}.exs"

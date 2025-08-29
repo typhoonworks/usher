@@ -3,7 +3,13 @@ defmodule Usher.Config do
   Configuration management for Usher.
 
   Handles loading and validating configuration from the application environment.
+
+  See the [configuration guide](guides/configuration.md) for details on usage.
   """
+
+  # Disabled because Dialyzer thinks our typespec is too broad, as it's only
+  # seeing the default value returned from `Application.compile_env/3`.
+  @dialyzer {:nowarn_function, schema_overrides: 0}
 
   # Only introduced in Elixir 1.17 and since we support down to 1.14, we copy
   # the type definition here.
@@ -24,12 +30,18 @@ defmodule Usher.Config do
           }
         }
 
+  @type schema_overrides :: %{
+          optional(:invitation) => %{custom_attributes_type: :map | module()}
+        }
+
   @type t :: [
           repo: Ecto.Repo.t(),
           token_length: non_neg_integer(),
           default_expires_in: duration_unit_pair(),
           validations: validations()
         ]
+
+  @schema_overrides Application.compile_env(:usher, :schema_overrides, %{})
 
   @doc """
   Returns the configured Ecto repository.
@@ -91,6 +103,12 @@ defmodule Usher.Config do
   def validations do
     Application.get_env(:usher, :validations, %{})
   end
+
+  @doc """
+  Returns schema override configuration for all schemas.
+  """
+  @spec schema_overrides() :: schema_overrides()
+  def schema_overrides, do: @schema_overrides
 
   @doc """
   Returns whether the name field is required for invitations.
@@ -213,6 +231,48 @@ defmodule Usher.Config do
         Invalid valid_usage_actions configuration for Usher: #{inspect(invalid)}
 
         Expected a list of atoms, got: #{inspect(invalid)}
+        """
+    end
+  end
+
+  @doc """
+  Returns the schema field type for the `:custom_attributes` field in the
+  `Usher.Invitation` schema.
+  """
+  @spec custom_attributes_type() :: :map | module()
+  def custom_attributes_type do
+    custom_attributes_config_value =
+      schema_overrides() |> get_in([:invitation, :custom_attributes_type])
+
+    custom_attributes_type =
+      case custom_attributes_config_value do
+        nil -> :map
+        module when is_atom(module) -> Code.ensure_compiled(module)
+        _ -> {:error, :unsupported_config_value}
+      end
+
+    case custom_attributes_type do
+      :map ->
+        :map
+
+      {:module, module} ->
+        module
+
+      {:error, :nofile} ->
+        raise """
+        Could not find module #{inspect(custom_attributes_config_value)}.
+        """
+
+      {:error, :unsupported_config_value} ->
+        raise """
+        #{inspect(custom_attributes_config_value)} is not a supported value for the `:custom_attributes_type` config.
+
+        Must be `:map` or a module name.
+        """
+
+      error ->
+        raise """
+        An unexpected error occurred for `:custom_attributes_type` config value `#{inspect(custom_attributes_config_value)}`: #{inspect(error)}.
         """
     end
   end
