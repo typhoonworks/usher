@@ -6,8 +6,15 @@ defmodule Usher.Invitation do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
+
   alias Usher.Config
+
+  # Disabled because Dialyzer only sees the default value returned from
+  # `Application.compile_env/3` called in `Usher.Config`, so it thinks
+  # the value of `@custom_attributes_type` can only be `:map`.
+  @dialyzer :no_match
 
   @custom_attributes_type Config.custom_attributes_type()
 

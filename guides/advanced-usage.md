@@ -302,6 +302,8 @@ end
 
 Custom attributes allow defining attributes you can utilize after you validate an invitation. For example, you could utilize these attributes to determine the welcome message or the role a user should be assigned during account creation.
 
+The examples here assume the default configuration for `:custom_attributes`, which is a field of type `Map`. If you'd like to use an embedded schema instead, see the [configuration guide](configuration.md#using-embedded-schema)
+
 ### Example: Setting User Role upon Registration
 
 ```elixir

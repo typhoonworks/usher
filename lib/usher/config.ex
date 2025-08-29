@@ -7,6 +7,10 @@ defmodule Usher.Config do
   See the [configuration guide](guides/configuration.md) for details on usage.
   """
 
+  # Disabled because Dialyzer thinks our typespec is too broad, as it's only
+  # seeing the default value returned from `Application.compile_env/3`.
+  @dialyzer {:nowarn_function, schema_overrides: 0}
+
   # Only introduced in Elixir 1.17 and since we support down to 1.14, we copy
   # the type definition here.
   @type duration_unit_pair() ::

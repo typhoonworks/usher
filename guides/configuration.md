@@ -66,13 +66,13 @@ The available options for `:invitation_usage` are:
 
 ### Schemas
 
-You can customize the schema behavior for various parts of Usher using the `:schemas` option.
+You can customize the schema behavior for various parts of Usher using the `:schema_overrides` option.
 
-The `:schemas` option accepts a map where keys are schema names (like `:invitation`) and values are maps of schema configurations. For example:
+The `:schema_overrides` option accepts a map where keys are schema names (like `:invitation`) and values are maps of schema configurations. For example:
 
 ```elixir
 config :usher,
-  schemas: %{
+  schema_overrides: %{
     invitation: %{
       custom_attributes_type: MyApp.InvitationAttributes
     }
@@ -122,7 +122,7 @@ For better type safety and validation, you can set `:custom_attributes_type` to 
 config :usher,
   repo: MyApp.Repo,
   # Other configuration...
-  schemas: %{
+  schema_overrides: %{
     invitation: %{
       custom_attributes_type: MyApp.InvitationAttributes
     }
