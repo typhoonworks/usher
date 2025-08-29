@@ -74,39 +74,39 @@ The `:schemas` option accepts a map where keys are schema names (like `:invitati
 config :usher,
   schemas: %{
     invitation: %{
-      custom_attributes_embedded_schema: MyApp.InvitationAttributes
+      custom_attributes_type: MyApp.InvitationAttributes
     }
   }
 ```
 
 The available options for `:invitation` schemas are:
 
-| Option                               | Type   | Default | Required | Description                                        |
-| ------------------------------------ | ------ | ------- | -------- | -------------------------------------------------- |
-| `:custom_attributes_embedded_schema` | module | `nil`   | No       | Embedded schema module for custom_attributes field |
+| Option                    | Type   | Default | Required | Description                                                                            |
+| ------------------------- | ------ | ------- | -------- | -------------------------------------------------------------------------------------- |
+| `:custom_attributes_type` | module | `:map`  | No       | Embedded schema module for custom_attributes field. If not defined, defaults to `:map` |
 
-## Custom Attributes Configuration
+## Invitation `:custom_attributes` Configuration
 
-Usher supports storing custom attributes with invitations through the `custom_attributes` field. By default, this field uses the `:map` type, but you can use an embedded schema if you'd like.
+Usher supports storing custom attributes with invitations through the `custom_attributes` field. By default, this field uses the `:map` type. If you want better type safety and validations, you can use an embedded schema.
 
 ### Using Map Type (Default)
 
-The simplest approach is to use the default `:map` type:
+When `:custom_attributes_type` is not defined, the value of `invitation.custom_attributes` will be of type `Map`:
 
 ```elixir
 {:ok, invitation} = Usher.create_invitation(%{
   name: "Join our team",
   custom_attributes: %{
-    "role" => "developer",
-    "department" => "engineering",
-    "tags" => ["backend", "elixir"]
+    role: "developer",
+    department: "engineering",
+    tags: ["backend", "elixir"]
   }
 })
 
 # Access after validation
 case Usher.validate_invitation_token(token) do
   {:ok, invitation} ->
-    role = invitation.custom_attributes["role"]
+    role = invitation.custom_attributes.role
     # Use role for user creation or other business logic
   {:error, reason} ->
     # Handle error
@@ -115,7 +115,7 @@ end
 
 ### Using Embedded Schema
 
-For better type safety and validation, configure an embedded schema:
+For better type safety and validation, you can set `:custom_attributes_type` to an embedded schema:
 
 ```elixir
 # In config/config.exs
@@ -124,7 +124,7 @@ config :usher,
   # Other configuration...
   schemas: %{
     invitation: %{
-      custom_attributes_embedded_schema: MyApp.InvitationAttributes
+      custom_attributes_type: MyApp.InvitationAttributes
     }
   }
 ```
@@ -169,9 +169,9 @@ With the embedded schema configured, you can use it like this:
 
 # Access typed fields after validation
 case Usher.validate_invitation_token(token) do
-  {:ok, invitation} ->
-    role = invitation.custom_attributes.role
-    department = invitation.custom_attributes.department
+  {:ok, %{custom_attributes: %MyApp.InvitationAttributes{} = custom_attributes}} ->
+    role = custom_attributes.role
+    department = custom_attributes.department
     # Use role for user creation or other business logic
   {:error, reason} ->
     # Handle error

@@ -9,10 +9,7 @@ defmodule Usher.Invitation do
   import Ecto.Changeset
   alias Usher.Config
 
-  @custom_attributes_type Application.compile_env(
-                            :usher,
-                            [:schemas, :invitation, :custom_attributes_embedded_schema]
-                          )
+  @custom_attributes_type Config.custom_attributes_type()
 
   @permitted_fields [:token, :name, :expires_at]
 
@@ -34,10 +31,10 @@ defmodule Usher.Invitation do
     field(:name, :string)
     field(:expires_at, :utc_datetime)
 
-    if @custom_attributes_type do
-      embeds_one(:custom_attributes, @custom_attributes_type)
-    else
+    if @custom_attributes_type == :map do
       field(:custom_attributes, :map)
+    else
+      embeds_one(:custom_attributes, @custom_attributes_type)
     end
 
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
@@ -100,21 +97,21 @@ defmodule Usher.Invitation do
   end
 
   defp permitted_fields do
-    if @custom_attributes_type do
+    if @custom_attributes_type == :map do
       # When a custom attribute embedded schema is provided,
       # we need to use `cast_embed/3` instead of adding :custom_attributes
       # to the list of permitted fields for `cast/3`
-      @permitted_fields
-    else
       [:custom_attributes | @permitted_fields]
+    else
+      @permitted_fields
     end
   end
 
   defp maybe_cast_embed(changeset) do
-    if @custom_attributes_type do
-      cast_embed(changeset, :custom_attributes)
-    else
+    if @custom_attributes_type == :map do
       changeset
+    else
+      cast_embed(changeset, :custom_attributes)
     end
   end
 end

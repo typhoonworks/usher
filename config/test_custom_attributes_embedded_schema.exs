@@ -4,8 +4,8 @@
 import Config
 
 config :usher,
-  schemas: %{
+  schema_overrides: %{
     invitation: %{
-      custom_attributes_embedded_schema: Usher.CustomAttributesEmbeddedSchema
+      custom_attributes_type: Usher.CustomAttributesEmbeddedSchema
     }
   }

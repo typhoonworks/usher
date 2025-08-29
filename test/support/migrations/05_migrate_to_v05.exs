@@ -1,4 +1,4 @@
-defmodule Usher.Test.Repo.Migrations.MigrateToVersion04 do
+defmodule Usher.Test.Repo.Migrations.MigrateToVersion05 do
   use Ecto.Migration
 
   def up do

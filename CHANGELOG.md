@@ -35,7 +35,7 @@ This migration adds a `custom_attributes` field to the invitations table for sto
 
 ### Added
 - **Custom Attributes Support**: Added `custom_attributes` field to `Usher.Invitation` schema for storing custom attributes for use with the invitation (defaults to `:map` type)
-- **Configurable Custom Attributes Schema**: Added ability to configure embedded schema for custom attributes field via `config :usher, schemas: %{invitation: %{custom_attributes_embedded_schema: YourSchema}}`
+- **Configurable Custom Attributes Schema**: Added ability to configure embedded schema for custom attributes field via `config :usher, schemas: %{invitation: %{custom_attributes_type: YourSchema}}`
 - Database migration `Usher.Migrations.V05` to add the `custom_attributes` column
 - New test environment `test_custom_attributes_embedded_schema` for testing embedded schema configuration
 
