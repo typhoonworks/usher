@@ -75,11 +75,11 @@ defmodule MyApp.Repo.Migrations.InstallUsherTables do
   use Ecto.Migration
 
   def up do
-    Usher.Migration.migrate_to_version("v04")  # Latest version
+    Usher.Migration.migrate_to_version(5)  # Latest version
   end
 
   def down do
-    Usher.Migration.migrate_to_version("v01")  # First version
+    Usher.Migration.migrate_to_version(1)  # First version
   end
 end
 ```

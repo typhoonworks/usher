@@ -17,11 +17,11 @@ defmodule Usher.Migration do
         use Ecto.Migration
 
         def up do
-          Usher.Migration.migrate_to_version("v04")
+          Usher.Migration.migrate_to_version(4)
         end
 
         def down do
-          Usher.Migration.migrate_to_version("v01")
+          Usher.Migration.migrate_to_version(1)
         end
       end
 
@@ -32,11 +32,11 @@ defmodule Usher.Migration do
         import Usher.Migration
 
         def up do
-          Usher.Migration.migrate_to_version("v04")
+          Usher.Migration.migrate_to_version(4)
         end
 
         def down do
-          Usher.Migration.migrate_to_version("v03")
+          Usher.Migration.migrate_to_version(3)
         end
       end
   """
@@ -44,21 +44,22 @@ defmodule Usher.Migration do
 
   alias Usher.Config
 
-  @latest_version "v05"
-  @all_versions ["v01", "v02", "v03", "v04", "v05"]
+  @dialyzer {:nowarn_function, latest_version: 0}
+
+  @latest_version 5
   @invitations_table_name "usher_invitations"
 
   @doc """
   Returns the latest version of the Usher migrations.
   """
-  @spec latest_version() :: String.t()
+  @spec latest_version() :: non_neg_integer()
   def latest_version, do: @latest_version
 
   @doc """
-  Returns a list of all available migration versions.
+  Returns a list of all valid migration versions.
   """
-  @spec all_versions() :: [String.t()]
-  def all_versions, do: @all_versions
+  @spec valid_versions() :: [non_neg_integer()]
+  def valid_versions, do: Range.to_list(1..@latest_version)
 
   @doc """
   Migrates the Usher tables to a specific version.
@@ -69,21 +70,20 @@ defmodule Usher.Migration do
 
   ## Parameters
 
-    - `version`: The target version to migrate to, e.g. "v01", "v02", etc.
+    - `version`: The target version to migrate to, e.g. 1, 2, 3, etc.
 
   ## Examples
 
-      migrate_to_version("v03")
+      migrate_to_version(3)
   """
-  @spec migrate_to_version(String.t()) :: no_return()
+  @spec migrate_to_version(non_neg_integer()) :: no_return()
   def migrate_to_version(to_version) do
-    if to_version not in @all_versions do
+    if to_version > @latest_version or to_version < 1 do
       raise ArgumentError,
-            "Invalid migration version: #{to_version}. Valid versions are: #{@all_versions}"
+            "Invalid migration version: #{to_version}. Valid versions are: #{inspect(valid_versions())}"
     end
 
     current_version = get_current_version()
-    to_version = version_string_to_integer(to_version)
 
     if current_version == to_version do
       :ok
@@ -96,8 +96,8 @@ defmodule Usher.Migration do
     prefix = Keyword.get(opts, :prefix, "public")
 
     case query_table_version(prefix) do
-      version when version in @all_versions ->
-        version_string_to_integer(version)
+      version when is_integer(version) ->
+        version
 
       "legacy" ->
         1
@@ -117,8 +117,11 @@ defmodule Usher.Migration do
       """)
 
     case table_comment do
-      {:ok, %{rows: [[version]]}} when is_binary(version) -> version
-      {:ok, %{rows: []}} -> check_legacy_table(prefix)
+      {:ok, %{rows: [[version]]}} when is_binary(version) ->
+        version_string_to_integer(version)
+
+      {:ok, %{rows: []}} ->
+        check_legacy_table(prefix)
     end
   end
 
@@ -145,11 +148,7 @@ defmodule Usher.Migration do
 
   defp apply_migrations_from_to(from_version, to_version, opts)
        when from_version < to_version do
-    all_versions = Enum.map(@all_versions, &version_string_to_integer/1)
-
-    start_index = Enum.find_index(all_versions, &(&1 == from_version + 1))
-    end_index = Enum.find_index(all_versions, &(&1 == to_version))
-    versions = Enum.slice(all_versions, start_index..end_index)
+    versions = Range.to_list((from_version + 1)..to_version)
 
     Enum.each(versions, fn version ->
       migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
@@ -159,11 +158,7 @@ defmodule Usher.Migration do
 
   defp apply_migrations_from_to(from_version, to_version, opts)
        when from_version > to_version do
-    all_versions = Enum.map(@all_versions, &version_string_to_integer/1)
-
-    start_index = Enum.find_index(all_versions, &(&1 == from_version))
-    end_index = Enum.find_index(all_versions, &(&1 == to_version + 1))
-    versions = Enum.slice(all_versions, end_index..start_index) |> Enum.reverse()
+    versions = Range.to_list((to_version + 1)..from_version) |> Enum.reverse()
 
     Enum.each(versions, fn version ->
       migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
