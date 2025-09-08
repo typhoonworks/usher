@@ -199,26 +199,6 @@ config :usher,
   }
 ```
 
-### Entity Types
-
-Define what types of entities can interact with invitations. You can use any atoms you'd like, here are some examples:
-
-- `:user` - Individual users
-- `:company` - Organizations or companies
-- `:device` - Hardware devices or IoT endpoints
-- `:team` - Team or group entities
-- Any custom atom representing your domain entities
-
-### Actions
-
-Define what actions can be tracked. You can use any atoms you'd like, here are some examples:
-
-- `:visited` - Entity visited the invitation page
-- `:registered` - Entity completed registration
-- `:activated` - Entity activated their account
-- `:downloaded` - Entity downloaded something
-- Any custom atom representing actions in your domain
-
 ## Time Units
 
 The `:default_expires_in` option accepts tuples with these time units:
