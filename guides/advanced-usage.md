@@ -85,8 +85,6 @@ You can also create never-expiring invitations directly:
 
 ### Expiration Management Strategies
 
-#### 1. Dynamic Expiration Based on Usage
-
 Extend invitations based on their usage patterns:
 
 ```elixir
@@ -109,27 +107,8 @@ defmodule MyApp.AdaptiveInvitations do
     cutoff_date = DateTime.utc_now() |> DateTime.add(-7, :day)
 
     Enum.filter(invitation_usages, fn invitation_usage ->
-      case DateTime.compare(invitation_usage.inserted_at, cutoff_date) do
-        :gt -> true
-        _ -> false
-      end
+      DateTime.compare(invitation_usage.inserted_at, cutoff_date) == :gt
     end)
-  end
-end
-```
-
-#### 2. Conditional Expiration Removal
-
-Make invitations permanent based on criteria:
-
-```elixir
-defmodule MyApp.PremiumInvitations do
-  def upgrade_to_permanent(invitation, user) do
-    if User.premium_account?(user) do
-      Usher.remove_invitation_expiration(invitation)
-    else
-      {:ok, invitation}
-    end
   end
 end
 ```
@@ -345,7 +324,6 @@ defmodule MyApp.RoleBasedInvitations do
     with {:ok, invitation} <- Usher.validate_invitation_token(invitation_token),
          {:ok, user} <- create_user_from_invitation(invitation, user_params) do
 
-      # Track the registration
       Usher.track_invitation_usage(invitation, :user, user.id, :registered)
 
       {:ok, user}
@@ -387,8 +365,6 @@ defmodule MyApp.CampaignInvitations do
 
   def track_campaign_interaction(invitation_token, entity_id, action) do
     with {:ok, invitation} <- Usher.validate_invitation_token(invitation_token) do
-
-      # Track the action with Usher
       Usher.track_invitation_usage(invitation, :user, entity_id, action)
 
       # Also send to your analytics service
@@ -416,43 +392,5 @@ defmodule MyApp.CampaignInvitations do
 
     MyApp.Analytics.track_event(analytics_event)
   end
-end
-```
-
-## Complex Validation Patterns
-
-### Multi-Step Validation
-
-```elixir
-defmodule MyApp.InvitationValidator do
-  def validate_with_context(token, context \\ %{}) do
-    with {:ok, invitation} <- Usher.validate_invitation_token(token),
-         :ok <- check_usage_limits(invitation, context) do
-      {:ok, invitation}
-    end
-  end
-
-  defp check_usage_limits(invitation, context) do
-    max_uses = Map.get(context, :max_uses, 100)
-
-    invitation_usage_count =
-      invitation
-      |> Usher.list_invitation_usages_by_unique_entity(action: :joined)
-      |> Enum.count()
-
-    if invitation_usage_count >= max_uses do
-      {:error, :usage_limit_exceeded}
-    else
-      :ok
-    end
-  end
-end
-
-# Usage
-case MyApp.InvitationValidator.validate_with_context("abc123", %{
-  max_uses: 50
-}) do
-  {:ok, invitation} -> proceed_with_registration(invitation)
-  {:error, reason} -> handle_validation_error(reason)
 end
 ```
