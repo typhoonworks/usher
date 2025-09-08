@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Migration Guide
 
-**Major Migration Update:**
+This version features a major change to the migration system AND requires you to run a new database migration for existing installations. Please read the instructions below carefully.
+
+**1. Major Migration Update:**
 
 ⚠️ This version changes migration versions from strings (e.g. "v01", "v02") to integers (e.g. 1, 2) ⚠️
 
@@ -35,7 +37,7 @@ Alternatively, you can run the following from within your `migrations` directory
 find . -type f -name "*.exs" -print0 | xargs -0 sed -E -i.bak 's/migrate_to_version\("v0([0-9])"\)/migrate_to_version(\1)/g' && find . -type f -name "*.bak" -delete
 ```
 
-**Database Migration Required:**
+**2. Database Migration Required:**
 
 For existing installations, create a new migration to add custom attributes support:
 
