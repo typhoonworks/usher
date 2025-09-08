@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2025-09-08
 
 ### Migration Guide
 
@@ -78,8 +78,7 @@ This migration adds a `custom_attributes` field to the invitations table for sto
 
 - Testing infrastructure with separate test environment for compile-time config values.
 - Strengthened randomly generated invitation tokens. Switched to unbiased, cryptographically secure base62 token generation (avoids modulo bias)
-
-Note: In v0.6.0, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
+- Changed migration versioning from strings (e.g. "v01", "v02") to integers (e.g. 1, 2)
 
 ## [0.4.0] - 2025-08-02
 
