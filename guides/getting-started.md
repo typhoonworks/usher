@@ -118,7 +118,17 @@ url = Usher.invitation_url("a1b2c3d4e5f6g7h8", "https://myapp.com/signup")
 # The function handles existing query parameters
 url = Usher.invitation_url("a1b2c3d4e5f6g7h8", "https://myapp.com/signup?ref=email")
 # => "https://myapp.com/signup?ref=email&invitation_token=a1b2c3d4e5f6g7h8"
+
+# Signed URL (optional, for user-supplied tokens)
+{:ok, invitation, signature} =
+  Usher.create_invitation_with_signed_token(%{token: "friendly-code-2025"})
+
+signed_url =
+  Usher.signed_invitation_url(invitation.token, signature, "https://myapp.com/signup")
+# => "https://myapp.com/signup?invitation_token=friendly-code-2025&s=..."
 ```
+
+Usher supports signed invitation tokens to prevent token guessing. For usage details, see [Advanced Usage Guide - Signed Tokens](advanced-usage.md#signed-tokens).
 
 ## Complete Example
 

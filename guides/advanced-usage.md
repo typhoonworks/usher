@@ -2,6 +2,26 @@
 
 This guide covers advanced patterns and techniques for using Usher in production applications.
 
+## Signed Tokens
+
+Usher supports cryptographically signed invitation tokens to prevent token guessing. This feature is particularly useful when you want to define user-friendly tokens that could be easily guessed, such as `youtube-2025`.
+
+To use signed tokens, ensure you have set the `:signing_secret` configuration option. See the [Configuration Guide](configuration.md#basic-configuration) for details.
+
+Generating and verifying signed tokens is straightforward:
+
+```elixir
+# Signed URL (optional, for user-supplied tokens)
+{:ok, invitation, signature} =
+  Usher.create_invitation_with_signed_token(%{token: "friendly-code-2025"})
+
+signed_url =
+  Usher.signed_invitation_url(invitation.token, signature, "https://myapp.com/signup")
+# => "https://myapp.com/signup?invitation_token=friendly-code-2025&s=..."
+```
+
+> ⚠️ This feature only prevents guessing of user-supplied tokens by people who do not have access to the invitation token.
+
 ## Invitation Expiration Management
 
 Usher provides flexible expiration management capabilities, allowing you to extend, modify, or remove expiration dates from invitations.

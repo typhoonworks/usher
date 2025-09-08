@@ -28,7 +28,8 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 ## What's planned?
 - [x] Invitations with no expiration date.
 - [x] Linking invitation tokens to user accounts (e.g. to track which user registered with which invitation): Added in v0.3.0.
-- [ ] Cryptographic signing of invitation tokens to prevent guessing tokens.
+- [x] Cryptographic signing of invitation tokens to prevent guessing tokens.
+- [ ] Web UI for managing invitation tokens.
 - [ ] Invitation expiration after X number of uses (including one-time use links).
 - [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Descriptions for invitation links so you can provide context for its usage.
