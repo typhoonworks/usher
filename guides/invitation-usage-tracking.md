@@ -4,11 +4,11 @@ This guide explains how to use Usher's invitation tracking features to monitor e
 
 With Usher, you can track any domain entity's usage of invitation links, such as users, companies, devices, etc.
 
-## Overview
+## A note about tracking
 
-Usher provides two levels of invitation tracking:
-1. **Basic tracking** - Simple joined count for backward compatibility
-2. **Entity tracking** - Detailed tracking of different entity types and their actions
+Most countries around the world have privacy laws that regulate user tracking. Please ensure you comply with all relevant regulations (e.g., GDPR, CCPA) when implementing tracking features in your application. **Usher does not handle compliance for you**.
+
+We encourage you to only track what is necessary, to be transparent with your users about what you are tracking and why, and to anonymize tracking where possible.
 
 ## Configuration
 
@@ -26,23 +26,6 @@ config :usher,
   }
 ```
 
-## Database Setup
-
-Add the invitation tracking tables to your database:
-
-```elixir
-# Create a migration file
-defmodule MyApp.Repo.Migrations.CreateUsherTables do
-  use Ecto.Migration
-  import Usher.Migration
-
-  def change do
-    create_usher_invitations_table()
-    create_usher_invitation_usages_table()
-  end
-end
-```
-
 ## Entity Tracking
 
 ### Track Invitation Usage
@@ -53,7 +36,7 @@ Track when entities interact with your invitation links:
 # Track with invitation struct
 {:ok, usage} = Usher.track_invitation_usage(
   invitation,
-  :user,                    # entity type
+  :user,                   # entity type
   "user_123",              # entity ID
   :registered,             # action
   %{                       # optional metadata
@@ -77,6 +60,7 @@ Track when entities interact with your invitation links:
 ### Common Tracking Patterns
 
 **Track page visits:**
+
 ```elixir
 # When someone clicks the invitation link
 Usher.track_invitation_usage(token, :user, user_id, :visited, %{
@@ -87,6 +71,7 @@ Usher.track_invitation_usage(token, :user, user_id, :visited, %{
 ```
 
 **Track registrations:**
+
 ```elixir
 # When user completes registration
 Usher.track_invitation_usage(invitation, :user, new_user.id, :registered, %{
@@ -96,6 +81,7 @@ Usher.track_invitation_usage(invitation, :user, new_user.id, :registered, %{
 ```
 
 **Track activations:**
+
 ```elixir
 # When user activates their account
 Usher.track_invitation_usage(invitation, :user, user.id, :activated, %{
@@ -118,7 +104,7 @@ user_usages = Usher.list_invitation_usages(invitation, entity_type: :user)
 registrations = Usher.list_invitation_usages(invitation, action: :registered)
 
 # Multiple filters with pagination
-recent_visits = Usher.list_invitation_usages(invitation, 
+recent_visits = Usher.list_invitation_usages(invitation,
   entity_type: :user,
   action: :visited,
   limit: 10
@@ -134,7 +120,7 @@ entities = Usher.list_invitation_usages_by_unique_entity(invitation)
 
 # Filter for specific actions
 registered_entities = Usher.list_invitation_usages_by_unique_entity(
-  invitation, 
+  invitation,
   action: :registered
 )
 ```
@@ -159,7 +145,7 @@ defmodule MyApp.InvitationAnalytics do
     visits = Usher.list_invitation_usages(invitation, action: :visited)
     registrations = Usher.list_invitation_usages(invitation, action: :registered)
     activations = Usher.list_invitation_usages(invitation, action: :activated)
-    
+
     %{
       visits: length(visits),
       registrations: length(registrations),
@@ -198,7 +184,7 @@ defmodule MyApp.InvitationAnalytics do
     |> Enum.filter(& &1)
     |> Enum.frequencies()
   end
-  
+
   def plan_preferences(invitation) do
     invitation
     |> Usher.list_invitation_usages(action: :registered)
@@ -215,41 +201,23 @@ Common error scenarios and handling:
 
 ```elixir
 case Usher.track_invitation_usage(token, :user, "123", :registered) do
-  {:ok, usage} -> 
+  {:ok, usage} ->
     # Success
     usage
-    
-  {:error, :invalid_token} -> 
+
+  {:error, :invalid_token} ->
     # Token doesn't exist
-    
-  {:error, :invitation_expired} -> 
+
+  {:error, :invitation_expired} ->
     # Invitation has expired
-    
-  {:error, :invalid_entity_type} -> 
+
+  {:error, :invalid_entity_type} ->
     # Entity type not in valid_usage_entity_types config
-    
-  {:error, :invalid_action} -> 
+
+  {:error, :invalid_action} ->
     # Action not in valid_usage_actions config
-    
-  {:error, %Ecto.Changeset{}} -> 
+
+  {:error, %Ecto.Changeset{}} ->
     # Database constraint violation (e.g., duplicate tracking)
 end
 ```
-
-## Best Practices
-
-1. **Use meaningful entity types** - Choose types that match your business model
-2. **Track the full journey** - Record visits, registrations, and activations
-3. **Include relevant metadata** - Store context that helps with analysis
-4. **Handle duplicates gracefully** - The system prevents duplicate tracking automatically
-5. **Validate tokens before tracking** - Always check if invitation is valid and not expired
-6. **Use filtering for large datasets** - Apply entity_type and action filters for performance
-
-## Performance Considerations
-
-- Use database indexes on frequently queried fields
-- Consider pagination for large usage datasets
-- Cache frequently accessed statistics
-- Use database-level aggregations for complex analytics
-
-This tracking system provides comprehensive insights into how your invitation links are being used, helping you optimize your conversion funnels and understand user behavior patterns.
