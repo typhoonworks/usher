@@ -16,7 +16,8 @@ config :usher,
       valid_usage_entity_types: [:user, :company, :device],
       valid_usage_actions: [:visited, :registered, :activated]
     }
-  }
+  },
+  signing_secret: "test-secret"
 
 config :usher, Usher.Test.Repo,
   username: "postgres",

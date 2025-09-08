@@ -19,18 +19,20 @@ config :usher,
       valid_usage_entity_types: [:user, :company, :device],
       valid_usage_actions: [:visited, :registered, :activated]
     }
-  }
+  },
+  signing_secret: System.fetch_env!("USHER_SIGNING_SECRET")
 ```
 
 ## Configuration Options
 
-| Option                | Type    | Default     | Required | Description                                   |
-| --------------------- | ------- | ----------- | -------- | --------------------------------------------- |
-| `:repo`               | module  | N/A         | **Yes**  | Your Ecto repository module                   |
-| `:token_length`       | integer | `16`        | No       | Length of generated invitation tokens         |
-| `:default_expires_in` | tuple   | `{7, :day}` | No       | Default expiration period for new invitations |
-| `:validations`        | map     | `%{}`       | No       | Map defining validation rules for invitations |
-| `:schemas`            | map     | `%{}`       | No       | Map defining custom schema configurations     |
+| Option                | Type    | Default     | Required                      | Description                                     |
+| --------------------- | ------- | ----------- | ----------------------------- | ----------------------------------------------- |
+| `:repo`               | module  | N/A         | **Yes**                       | Your Ecto repository module                     |
+| `:token_length`       | integer | `16`        | No                            | Length of generated invitation tokens           |
+| `:default_expires_in` | tuple   | `{7, :day}` | No                            | Default expiration period for new invitations   |
+| `:validations`        | map     | `%{}`       | No                            | Map defining validation rules for invitations   |
+| `:schemas`            | map     | `%{}`       | No                            | Map defining custom schema configurations       |
+| `:signing_secret`     | string  | `nil`       | Only when using signed tokens | Secret used to sign/verify user-supplied tokens |
 
 ### Validations
 
@@ -254,6 +256,9 @@ You can also configure Usher at runtime or override specific values:
 {:ok, invitation} = Usher.create_invitation(%{
   token: "my-very-long-custom-token-here"
 })
+
+# Signed token setup (requires signing_secret)
+config :usher, signing_secret: System.fetch_env!("USHER_SIGNING_SECRET")
 ```
 
 ## Accessing Configuration

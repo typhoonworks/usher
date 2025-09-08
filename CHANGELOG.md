@@ -38,11 +38,18 @@ This migration adds a `custom_attributes` field to the invitations table for sto
 - **Configurable Custom Attributes Schema**: Added ability to configure embedded schema for custom attributes field via `config :usher, schemas: %{invitation: %{custom_attributes_type: YourSchema}}`
 - Database migration `Usher.Migrations.V05` to add the `custom_attributes` column
 - New test environment `test_custom_attributes_embedded_schema` for testing embedded schema configuration
+- **Invitation token signatures**:
+  - New `Usher.Token.Signature` module to sign and verify user-supplied tokens using HMAC-SHA256
+  - New `Usher.create_invitation_with_signed_token/2` to create an invitation and return a signed presentation token
+  - New `Usher.validate_secure_invitation_token/2` to verify the signature and validate the invitation in one step
+  - New `Usher.signed_invitation_url/3` to build URLs containing both the `invitation_token` and its signature (`s` query param)
+- New configuration option: `config :usher, signing_secret: "..."` to enable token signing/verification
 
 ### Changed
 - Testing infrastructure with separate test environment for compile-time config values.
+- Strengthened randomly generated invitation tokens. Switched to unbiased, cryptographically secure base62 token generation (avoids modulo bias)
 
-Note: In a future release, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
+Note: In v0.6.0, the migration system will be updated to use integers for versioning (e.g. 1, 2, 3, etc.) instead of strings (e.g. "v01", "v02", etc.). This will simplify migration management and allow for easier version comparisons in the `Usher.Migration` module.
 
 ## [0.4.0] - 2025-08-02
 
