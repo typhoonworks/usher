@@ -9,7 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Migration Guide
 
-**Database Migration Required:**
+This version features a major change to the migration system AND requires you to run a new database migration for existing installations. Please read the instructions below carefully.
+
+**1. Major Migration Update:**
+
+⚠️ This version changes migration versions from strings (e.g. "v01", "v02") to integers (e.g. 1, 2) ⚠️
+
+While this simplifies the migration system of Usher, it requires a small change in your migration files.
+
+Currently, your migration files will contain calls to `Usher.Migration.migrate_to_version/1` with string versions:
+
+```elixir
+Usher.Migration.migrate_to_version("v03")
+```
+
+You will need to change the migration version argument to an integer:
+
+```elixir
+Usher.Migration.migrate_to_version(3)
+```
+
+If you are using an editor like VSCode, you can use the "Find and Replace" feature with regex enabled. Perform a regex search for `migrate_to_version\("v0(\d)"\)` and replace with `migrate_to_version($1)`.
+
+Alternatively, you can run the following from within your `migrations` directory:
+
+```bash
+find . -type f -name "*.exs" -print0 | xargs -0 sed -E -i.bak 's/migrate_to_version\("v0([0-9])"\)/migrate_to_version(\1)/g' && find . -type f -name "*.bak" -delete
+```
+
+**2. Database Migration Required:**
 
 For existing installations, create a new migration to add custom attributes support:
 
@@ -22,11 +50,11 @@ defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV05 do
   use Ecto.Migration
 
   def up do
-    Usher.Migration.migrate_to_version("v05")
+    Usher.Migration.migrate_to_version(5)
   end
 
   def down do
-    Usher.Migration.migrate_to_version("v04")
+    Usher.Migration.migrate_to_version(4)
   end
 end
 ```
@@ -34,6 +62,7 @@ end
 This migration adds a `custom_attributes` field to the invitations table for storing additional invitation metadata.
 
 ### Added
+
 - **Custom Attributes Support**: Added `custom_attributes` field to `Usher.Invitation` schema for storing custom attributes for use with the invitation (defaults to `:map` type)
 - **Configurable Custom Attributes Schema**: Added ability to configure embedded schema for custom attributes field via `config :usher, schemas: %{invitation: %{custom_attributes_type: YourSchema}}`
 - Database migration `Usher.Migrations.V05` to add the `custom_attributes` column
@@ -46,6 +75,7 @@ This migration adds a `custom_attributes` field to the invitations table for sto
 - New configuration option: `config :usher, signing_secret: "..."` to enable token signing/verification
 
 ### Changed
+
 - Testing infrastructure with separate test environment for compile-time config values.
 - Strengthened randomly generated invitation tokens. Switched to unbiased, cryptographically secure base62 token generation (avoids modulo bias)
 
@@ -76,9 +106,11 @@ defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV04 do
   end
 end
 ```
+
 This migration makes the `expires_at` column nullable to support never-expiring invitations.
 
 Additionally, you will have to go back to any Usher migrations using the `Usher.Migration.migrate_to_latest/1` function and change it to `Usher.Migration.migrate_to_version("v02")`, as the `Usher.Migration.migrate_to_latest/1` function has been removed:
+
 ```elixir
 defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV02 do
   use Ecto.Migration
@@ -92,6 +124,7 @@ end
 ```
 
 ### Added
+
 - **Invitation Expiration/Extension System**: Added ability to extend, set, or remove expiration dates from invitations
 - New API functions:
   - `Usher.extend_invitation_expiration/2` - Extend existing invitation expiration by given duration
@@ -100,19 +133,23 @@ end
 - Database migration `Usher.Migrations.V04` to make `expires_at` column nullable
 
 ### Changed
+
 - `Usher.Invitation` schema now allows `nil` for `expires_at` field to support never-expiring invitations
 - `Usher.validate_invitation_token/1` now treats invitations with `nil` `expires_at` as valid (never expire)
 
 ### Fixed
+
 - Migration "v03" now sets migration to version to "v02" when rolling back. Previously, it did not set the version correctly.
 - `Usher.Migration` functions were not executing `down/1` functions correctly. This has been fixed to ensure proper rollback behavior.
 
 ### Removed
+
 - Removed deprecated `Usher.Migration.migrate_to_latest/1` function. Use `Usher.Migration.migrate_to_version/1` instead.
 
 ## [0.3.1] - 2025-07-22
 
 ### Fixed
+
 - Fixed a bug with the `%{invitation: %{name_required: boolean()}` configuration option not being correctly recognized when set to `false`. The `Usher.Config.name_required?/0` function now correctly returns `false` when the configuration is set to not require names for invitations.
 
 ## [0.3.0] - 2025-07-21
@@ -124,11 +161,13 @@ end
 The `table_name` configuration option has been removed. Usher now uses a fixed table name `usher_invitations` for the invitations table.
 
 If you were using a custom table name, you will need to rename the table to `usher_invitations`. You can do this as follows, by creating a new migration:
+
 ```bash
 mix ecto.gen.migration rename_usher_invitations_table
 ```
 
 You might be wondering "if this is a breaking change, wouldn't the rename fail when I run all the migrations again (such as in a dev environment with `mix ecto.reset`)?". You won't encounter this issue if you check to see whether the `usher_invitations` table already exists before attempting to rename it. Here's an example migration that does this:
+
 ```elixir
 defmodule MyApp.Repo.Migrations.RenameUsherInvitationsTable do
   use Ecto.Migration
@@ -158,11 +197,13 @@ Alternatively, you can delete the old Usher migrations and keep the latest migra
 **2. New Database Migration and Required Configuration:**
 
 For existing installations, create a new migration:
+
 ```bash
 mix ecto.gen.migration upgrade_usher_tables_v03
 ```
 
 Use the new migration helper:
+
 ```elixir
 defmodule MyApp.Repo.Migrations.UpgradeUsherTablesV03 do
   use Ecto.Migration
@@ -174,6 +215,7 @@ end
 ```
 
 Then, update your configuration to include the new `valid_usage_entity_types` and `valid_usage_actions` options, under the `validations` key:
+
 ```elixir
 config :usher, Usher.Config,
   validations: %{
@@ -183,6 +225,7 @@ config :usher, Usher.Config,
     }
   }
 ```
+
 _Note: the new `valid_usage_entity_types` and `valid_usage_actions` options are **required**_
 
 See the [configuration guide](guides/configuration.md) for more details.
@@ -192,11 +235,13 @@ See the [configuration guide](guides/configuration.md) for more details.
 **3. Removed `Usher.increment_joined_count/1` function:**
 
 The `Usher.increment_joined_count/1` function has been removed. Use the new `Usher.track_invitation_usage/5` function to track invitation usage instead:
+
 ```elixir
 {:ok, _} = Usher.track_invitation_usage(invitation, :user, user.id, :registered, metadata)
 ```
 
 ### Added
+
 - **Invitation Usage Tracking System**: Introduced mapping between invitations and entity interactions
 - New schema `Usher.InvitationUsage` for tracking entity interactions with invitations. With this schema, you can now track when an entity uses an invitation, including the entity type, action taken, and timestamp.
 - New query module `Usher.Invitations.InvitationUsageQuery` for building invitation usage queries
@@ -214,17 +259,20 @@ The `Usher.increment_joined_count/1` function has been removed. Use the new `Ush
 - Added `jason` as a dependency because it's required for custom Ecto types (used for allowing atoms from strings in the schema definition).
 
 ### Changed
+
 - **`Usher.Migration.migrate_to_latest/1` is deprecated; use `Usher.Migration.migrate_to_version/1` instead.** `Usher.Migration.migrate_to_latest/1` will be removed in the next major release. Please check the [installation guide](guides/installation.md) for new migration instructions.
 - Updated `Usher.Invitation` schema with new associations to usage tracking schema.
 - Added new config options to `Usher.Config` for specifying valid entity types and actions that can be tracked with the invitation usage system.
 
 ### Removed
+
 - Removed `Usher.increment_joined_count/1` function. Use `Usher.track_invitation_usage/5` instead to track invitation usage.
 - Removed `table_name` configuration option. Usher now uses a fixed table name `usher_invitations` for the invitations table.
 
 ## [0.2.0] - 2025-07-18
 
 ### Added
+
 - Optional name field for invitations with configurable validation
 - Versioned migration system for safe database schema upgrades
 - Extensible validation configuration: `validations: %{invitation: %{name_required: true}}` (defaults to requiring names)
@@ -234,6 +282,7 @@ The `Usher.increment_joined_count/1` function has been removed. Use the new `Ush
 - CHANGELOG.md following Keep a Changelog format
 
 ### Changed
+
 - Migration system now uses `migrate_to_latest/1` instead of `create_usher_invitations_table/1`
 - Consolidated multiple function arities into single functions with default parameters
 - Updated README with complete development setup guide
@@ -241,16 +290,20 @@ The `Usher.increment_joined_count/1` function has been removed. Use the new `Ush
 - Error atom changed from `:expired` to `:invitation_expired` for consistency
 
 ### Removed
+
 - `create_usher_invitations_table/1` function (replaced by versioned migrations)
 - `drop_usher_invitations_table/1` function (replaced by versioned migrations)
 
 ### Migration Guide
+
 For existing installations, create a new migration:
+
 ```bash
 mix ecto.gen.migration upgrade_usher_tables
 ```
 
 Use the new migration helper:
+
 ```elixir
 defmodule YourApp.Repo.Migrations.UpgradeUsherTables do
   use Ecto.Migration
@@ -265,7 +318,9 @@ end
 This will automatically detect your current schema version and apply only the necessary migrations.
 
 ## [0.1.2] - 2025-01-15
+
 ### Added
+
 - First package to be released on hex.pm! 🎉
 - Token generation using cryptographic functions
 - Framework-agnostic invitation link management
@@ -274,4 +329,5 @@ This will automatically detect your current schema version and apply only the ne
 - Basic invitation validation and tracking
 
 ### Fixed
+
 - Fix project name for hex publish
