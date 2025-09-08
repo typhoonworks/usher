@@ -85,8 +85,7 @@ defmodule Usher.Invitations.CreateInvitationTest do
       user_token = "user_provided_token"
       {:ok, _first} = CreateInvitation.call(%{name: "First", token: user_token})
 
-      assert {:error, changeset} =
-               CreateInvitation.call(%{name: "Second", token: user_token})
+      assert {:error, changeset} = CreateInvitation.call(%{name: "Second", token: user_token})
 
       assert "has already been taken" in errors_on(changeset).token
     end
