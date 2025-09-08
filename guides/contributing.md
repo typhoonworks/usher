@@ -110,16 +110,7 @@ Use descriptive branch names:
 
 ### 3. Commit Your Changes
 
-Write clear, descriptive commit messages:
-
-```bash
-git commit -am 'Add bulk invitation creation feature
-
-- Add Usher.create_bulk_invitations/2 function
-- Include error handling for partial failures
-- Add comprehensive tests for bulk operations
-- Update documentation with usage examples'
-```
+Write clear, descriptive commit messages.
 
 ### 4. Run Quality Checks
 
