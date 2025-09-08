@@ -59,7 +59,7 @@ defmodule Usher.Migration do
   Returns a list of all valid migration versions.
   """
   @spec valid_versions() :: [non_neg_integer()]
-  def valid_versions, do: Range.to_list(1..@latest_version)
+  def valid_versions, do: Enum.to_list(1..@latest_version)
 
   @doc """
   Migrates the Usher tables to a specific version.
@@ -148,7 +148,7 @@ defmodule Usher.Migration do
 
   defp apply_migrations_from_to(from_version, to_version, opts)
        when from_version < to_version do
-    versions = Range.to_list((from_version + 1)..to_version)
+    versions = Enum.to_list((from_version + 1)..to_version)
 
     Enum.each(versions, fn version ->
       migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
@@ -158,7 +158,7 @@ defmodule Usher.Migration do
 
   defp apply_migrations_from_to(from_version, to_version, opts)
        when from_version > to_version do
-    versions = Range.to_list((to_version + 1)..from_version) |> Enum.reverse()
+    versions = Enum.to_list((to_version + 1)..from_version) |> Enum.reverse()
 
     Enum.each(versions, fn version ->
       migration_module = Module.concat([Usher.Migrations, "V0" <> Integer.to_string(version)])
