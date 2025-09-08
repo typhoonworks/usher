@@ -76,6 +76,27 @@ defmodule UsherTest do
     end
   end
 
+  describe "create_invitation_with_signed_token/1" do
+    test "returns token signature along with created invitation" do
+      assert {:ok, invitation, signature} =
+               Usher.create_invitation_with_signed_token(%{
+                 name: "Super Secret Invitation",
+                 token: "super-secret-invitation"
+               })
+
+      assert invitation.token == "super-secret-invitation"
+      assert invitation.name == "Super Secret Invitation"
+      assert invitation.expires_at
+
+      assert String.length(signature) > 0
+    end
+
+    test "returns {:ok, token_required} if no token is provided" do
+      assert {:error, :token_required} =
+               Usher.create_invitation_with_signed_token(%{name: "No Token"})
+    end
+  end
+
   describe "validate_invitation_token/1" do
     test "returns {:ok, invitation} for valid token" do
       invitation = invitation_fixture()
@@ -94,10 +115,42 @@ defmodule UsherTest do
     end
   end
 
+  describe "validate_secure_invitation_token/1" do
+    test "verifies token against signature" do
+      {:ok, invitation, signature} =
+        Usher.create_invitation_with_signed_token(%{
+          name: "Super Secret Invitation",
+          token: "super-secret-invitation"
+        })
+
+      assert {:ok, ^invitation} =
+               Usher.validate_secure_invitation_token(invitation.token, signature)
+    end
+
+    test "returns {:error, :invalid_signature} when signature wasn't generated from the token" do
+      assert {:error, :invalid_signature} =
+               Usher.validate_secure_invitation_token("token", "invalid-signature")
+    end
+  end
+
   describe "invitation_url/2" do
     test "builds URL with invitation token" do
       url = Usher.invitation_url("abc123", "https://example.com/signup")
       assert url == "https://example.com/signup?invitation_token=abc123"
+    end
+  end
+
+  describe "signed_invitation_url/2" do
+    test "builds URL with invitation token" do
+      url =
+        Usher.signed_invitation_url(
+          "abc123",
+          "Z7aPPn0OT3ARmifwmGJkMRec74H1AV-RwtpUqN8Ev2c",
+          "https://example.com/signup"
+        )
+
+      assert url ==
+               "https://example.com/signup?invitation_token=abc123&s=Z7aPPn0OT3ARmifwmGJkMRec74H1AV-RwtpUqN8Ev2c"
     end
   end
 

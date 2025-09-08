@@ -7,10 +7,13 @@ defmodule Usher do
   alias Usher.Invitation
   alias Usher.InvitationUsage
   alias Usher.Invitations.CreateInvitation
+  alias Usher.Invitations.CreateInvitationWithSignedToken
   alias Usher.Invitations.InvitationUsageQuery
+  alias Usher.Token.Signature
 
   @type entity_id :: String.t()
   @type invitation_usages_by_unique_entity :: list({entity_id(), map()})
+  @type signed_token :: String.t()
 
   @doc """
   Creates a new invitation with a token and default expiration datetime.
@@ -38,6 +41,23 @@ defmodule Usher do
   """
   def create_invitation(attrs \\ %{}, opts \\ []) do
     CreateInvitation.call(attrs, opts)
+  end
+
+  @doc """
+  Creates an invitation and returns a signed presentation token alongside it.
+
+  This is useful for scenarios where you want to use a user-friendly token,
+  but want to ensure authenticity, as user-friendly tokens are more likely to be
+  guessed or fabricated.
+
+  Only works when a `:token` is supplied in the attrs. If you're not supplying a
+  token, or do not care about the authenticity of invitation tokens, use
+  `Usher.create_invitation/2` instead.
+  """
+  @spec create_invitation_with_signed_token(map(), keyword()) ::
+          {:ok, Invitation.t(), signed_token()} | {:error, Ecto.Changeset.t() | :token_required}
+  def create_invitation_with_signed_token(attrs, opts \\ []) when is_map(attrs) do
+    CreateInvitationWithSignedToken.call(attrs, opts)
   end
 
   @doc """
@@ -106,6 +126,32 @@ defmodule Usher do
     with {:ok, invitation} <- get_invitation_by_token(token),
          :ok <- check_expiration(invitation.expires_at) do
       {:ok, invitation}
+    end
+  end
+
+  @doc """
+  Validates the invitation token against the given signature and returns
+  the invitation, if the signature is valid.
+
+  Returns `{:error, invalid_signature}` if the signature is invalid.
+
+  ## Examples
+
+      iex> Usher.validate_secure_invitation_token("valid_token", "S9cjQ8oET4qrHZjwdgbNsc9H3wwIn_e1st9E5A2GmXA")
+      {:ok, %Usher.Invitation{}}
+
+      iex> Usher.validate_secure_invitation_token("valid_token", "invalid-signature")
+      {:error, :invalid_signature}
+
+      iex> Usher.validate_invitation_token("expired_token", "S9cjQ8oET4qrHZjwdgbNsc9H3wwIn_e1st9E5A2GmXA")
+      {:error, :invitation_expired}
+  """
+  @spec validate_secure_invitation_token(Signature.token(), Signature.signature()) ::
+          {:ok, Invitation.t()} | {:error, Ecto.Changeset.t() | :invalid_signature}
+  def validate_secure_invitation_token(token, signature)
+      when is_binary(signature) and byte_size(signature) > 0 do
+    with {:ok, token} <- Signature.verify(token, signature) do
+      validate_invitation_token(token)
     end
   end
 
@@ -265,6 +311,22 @@ defmodule Usher do
   def invitation_url(token, base_url) do
     uri = URI.parse(base_url)
     query = URI.encode_query([{"invitation_token", token}])
+
+    %{uri | query: query} |> URI.to_string()
+  end
+
+  @doc """
+  Builds an invitation URL for the given token and signature using the base URL.
+
+  ## Examples
+
+      iex> Usher.signed_invitation_url("abc123", "Z7aPPn0OT3ARmifwmGJkMRec74H1AV-RwtpUqN8Ev2c", "https://example.com/signup")
+      "https://example.com/signup?invitation_token=abc123&s=Z7aPPn0OT3ARmifwmGJkMRec74H1AV-RwtpUqN8Ev2c"
+  """
+  @spec signed_invitation_url(Signature.token(), Signature.signature(), String.t()) :: String.t()
+  def signed_invitation_url(token, signature, base_url) do
+    uri = URI.parse(base_url)
+    query = URI.encode_query([{"invitation_token", token}, {"s", signature}])
 
     %{uri | query: query} |> URI.to_string()
   end

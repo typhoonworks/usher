@@ -307,4 +307,33 @@ defmodule Usher.Config do
       validations: validations()
     ]
   end
+
+  @doc """
+  Returns the signing secret for token signing.
+
+  Required if you use signed invitation tokens. Raises if not configured.
+  """
+  @spec signing_secret!() :: binary()
+  def signing_secret! do
+    case Application.get_env(:usher, :signing_secret) do
+      secret when is_binary(secret) and byte_size(secret) > 0 ->
+        secret
+
+      nil ->
+        raise """
+        No signing_secret configured for Usher.
+
+        Configure a secret in your application config to enable signing:
+
+            config :usher, signing_secret: System.fetch_env!("USHER_SIGNING_SECRET")
+        """
+
+      other ->
+        raise """
+        Invalid signing_secret configuration for Usher: #{inspect(other)}
+
+        Expected a non-empty binary, got: #{inspect(other)}
+        """
+    end
+  end
 end
