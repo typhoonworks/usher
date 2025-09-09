@@ -120,7 +120,7 @@ defmodule Usher.Migration do
       {:ok, %{rows: [[version]]}} when is_binary(version) ->
         version_string_to_integer(version)
 
-      {:ok, %{rows: []}} ->
+      {:ok, %{rows: _}} ->
         check_legacy_table(prefix)
     end
   end
