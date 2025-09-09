@@ -44,7 +44,7 @@ Add `usher` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.4.0"}
+    {:usher, "~> 0.5.0"}
   ]
 end
 ```
