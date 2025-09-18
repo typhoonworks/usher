@@ -16,6 +16,9 @@ defmodule Usher.Tasks do
 
           now = DateTime.utc_now()
 
+          from(i in Invitation, where: i.uses >= i.max_uses, select: i.id)
+          |> Config.repo().update_all(set: [expires_at: now])
+
           from(i in Invitation, where: i.expires_at >= ^now, select: i.id)
           |> Config.repo().update_all(set: [deleted_at: now])
 

@@ -19,12 +19,15 @@ defmodule Usher.Invitation do
 
   @custom_attributes_type Config.custom_attributes_type()
 
-  @permitted_fields [:token, :name, :expires_at]
+  @permitted_fields [:token, :name, :expires_at, :description, :max_uses, :uses]
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
           token: String.t(),
+          max_uses: Integer.t(),
+          uses: Integer.t(),
           name: String.t() | nil,
+          description: String.t() | nil,
           expires_at: DateTime.t() | nil,
           usages: [Usher.InvitationUsage.t()] | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
@@ -37,7 +40,10 @@ defmodule Usher.Invitation do
   schema "usher_invitations" do
     field(:token, :string)
     field(:name, :string)
+    field(:description, :string)
     field(:expires_at, :utc_datetime)
+    field(:max_uses, :integer)
+    field(:uses, :integer)
 
     if @custom_attributes_type == :map do
       field(:custom_attributes, :map)

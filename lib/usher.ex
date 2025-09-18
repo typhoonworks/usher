@@ -143,7 +143,8 @@ defmodule Usher do
   """
   def validate_invitation_token(token) do
     with {:ok, invitation} <- get_invitation_by_token(token),
-         :ok <- check_expiration(invitation.expires_at) do
+         :ok <- check_expiration(invitation.expires_at),
+         :ok <- check_usage(invitation) do
       {:ok, invitation}
     end
   end
@@ -178,6 +179,15 @@ defmodule Usher do
 
   defp check_expiration(expires_at) do
     case DateTime.compare(expires_at, DateTime.utc_now()) do
+      :gt -> :ok
+      _ -> {:error, :invitation_expired}
+    end
+  end
+
+  defp check_usage(nil), do: :ok
+
+  defp check_usage(invitation) do
+    case invitation.usage >= invitation.max_uses do
       :gt -> :ok
       _ -> {:error, :invitation_expired}
     end

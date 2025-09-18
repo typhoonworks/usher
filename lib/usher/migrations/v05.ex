@@ -14,6 +14,8 @@ defmodule Usher.Migrations.V05 do
 
     alter table(:usher_invitations, table_opts) do
       add(:custom_attributes, :map)
+      add(:max_uses, :integer)
+      add(:uses, :integer)
       soft_delete_columns()
     end
 

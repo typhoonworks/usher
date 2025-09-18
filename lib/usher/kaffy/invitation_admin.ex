@@ -51,6 +51,9 @@ defmodule Usher.Kaffy.InvitationAdmin do
       [
         id: %{create: :hidden, update: :show},
         name: nil,
+        description: nil,
+        max_uses: nil,
+        uses: nil,
         token: nil,
         inserted_at: %{create: :hidden, update: :show},
         expires_at: nil
@@ -61,11 +64,17 @@ defmodule Usher.Kaffy.InvitationAdmin do
       name = conn.params["invitation"]["name"]
       token = conn.params["invitation"]["token"]
       expires_at = conn.params["invitation"]["expires_at"]
+      description = conn.params["invitation"]["description"]
+      max_uses = conn.params["invitation"]["max_uses"]
+      uses = conn.params["invitation"]["uses"]
 
       attrs = %{
         "name" => name,
         "token" => token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "description" => description,
+        "max_uses" => max_uses,
+        "uses" => uses
       }
 
       Usher.create_invitation(attrs)
@@ -86,11 +95,17 @@ defmodule Usher.Kaffy.InvitationAdmin do
       name = conn.params["invitation"]["name"]
       token = conn.params["invitation"]["token"]
       expires_at = conn.params["invitation"]["expires_at"]
+      description = conn.params["invitation"]["description"]
+      max_uses = conn.params["invitation"]["max_uses"]
+      uses = conn.params["invitation"]["uses"]
 
       attrs = %{
         "name" => name,
         "token" => token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "description" => description,
+        "max_uses" => max_uses,
+        "uses" => uses
       }
 
       entry = Usher.Invitation.changeset(changeset, attrs) |> Config.repo().update()
