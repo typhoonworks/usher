@@ -68,7 +68,8 @@ defmodule Usher.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "test.setup": ["ecto.drop --quiet", "ecto.create", "ecto.migrate"],
-      lint: ["format", "dialyzer"]
+      lint: ["format", "dialyzer"],
+      install: ["Usher.install", "ecto.setup"]
     ]
   end
 
