@@ -52,7 +52,8 @@ defmodule Usher.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev | @test_environments], runtime: false},
       {:ex_doc, "~> 0.38", only: [:dev | @test_environments], runtime: false},
       {:mimic, "~> 2.0", only: @test_environments},
-      {:ecto_soft_delete, ">= 0.0.0"}
+      {:ecto_soft_delete, ">= 0.0.0"},
+      {:credo, "~> 1.7", only: [:dev | @test_environments], runtime: false}
     ]
   end
 

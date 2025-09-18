@@ -32,10 +32,10 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - [x] Web UI for managing invitation tokens.
 - [x] Soft delete for invitations to keep them in the database for analytics purposes. 
 - [x] Clean-up functions for expired invitations.
+- [x] Add credo checks to ensure code quality.
 - [ ] Invitation expiration after X number of uses (including one-time use links).
 - [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Descriptions for invitation links so you can provide context for its usage.
-- [ ] Add credo checks to ensure code quality.
 - [ ] Add status checks and run tests on pull requests.
 
 ## Installation

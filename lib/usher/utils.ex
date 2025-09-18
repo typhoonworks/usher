@@ -1,4 +1,7 @@
 defmodule Usher.Utils do
+  @moduledoc """
+  Utils for Usher.
+  """
   alias Framework.Utils
 
   def format_date(nil), do: "--"

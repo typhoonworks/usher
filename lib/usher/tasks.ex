@@ -1,4 +1,7 @@
 defmodule Usher.Tasks do
+  @moduledoc """
+  Kaffy Tasks.
+  """
   alias Usher.Config
   alias Usher.Invitation
 
@@ -7,7 +10,7 @@ defmodule Usher.Tasks do
       %{
         name: "Cleanup Invitations",
         initial_value: nil,
-        every: 50000,
+        every: 50_000,
         action: fn _v ->
           import Ecto.Query
 
