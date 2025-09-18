@@ -1,0 +1,100 @@
+defmodule Usher.Kaffy.InvitationAdmin do
+  @moduledoc """
+  Configuration for invitations in Kaffy admin.
+  """
+
+  compiled =
+    case Code.ensure_compiled(Phoenix.Component) do
+      {:module, _} -> true
+      _ -> false
+    end
+
+  if compiled == true do
+    import Phoenix.Component
+
+    alias Usher.Invitation
+
+    import Usher.Utils, only: [format_date: 1]
+
+    def widgets(_schema, _conn) do
+      [
+        %{
+          type: "tidbit",
+          title: "Total Invitations",
+          content: "#{Usher.total_invitations()}",
+          icon: "envelope",
+          order: 1,
+          width: 3
+        },
+        %{
+          type: "tidbit",
+          title: "Active Invitations",
+          content: "#{Usher.total_active_invitations()}",
+          icon: "envelope-open",
+          order: 2,
+          width: 3
+        }
+      ]
+    end
+
+    def index(_) do
+      [
+        id: nil,
+        name: nil,
+        token: nil,
+        inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
+        expires_at: nil
+      ]
+    end
+
+    def form_fields(_) do
+      [
+        id: %{create: :hidden, update: :show},
+        name: nil,
+        token: nil,
+        inserted_at: %{create: :hidden, update: :show},
+        expires_at: nil
+      ]
+    end
+
+    def insert(conn, _changeset) do
+      name = conn.params["invitation"]["name"]
+      token = conn.params["invitation"]["token"]
+      expires_at = conn.params["invitation"]["expires_at"]
+
+      attrs = %{
+        "name" => name,
+        "token" => token,
+        "expires_at" => expires_at
+      }
+
+      Usher.create_invitation(attrs)
+    end
+
+    def delete(conn, _changeset) do
+      with %{params: %{"ids" => id}} <- conn,
+           {:ok, invitation} <- Usher.get_invitation(id),
+           :ok = Usher.delete_invitation(invitation) do
+        {:ok, invitation}
+      else
+        error ->
+          {:error, error}
+      end
+    end
+
+    def update(conn, changeset) do
+      name = conn.params["invitation"]["name"]
+      token = conn.params["invitation"]["token"]
+      expires_at = conn.params["invitation"]["expires_at"]
+
+      attrs = %{
+        "name" => name,
+        "token" => token,
+        "expires_at" => expires_at
+      }
+
+      entry = Usher.Invitation.changeset(changeset, attrs) |> Config.repo().update()
+      {:ok, entry}
+    end
+  end
+end

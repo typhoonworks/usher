@@ -33,4 +33,13 @@ config :usher, Usher.Test.Repo,
 
 config :usher, ecto_repos: [Usher.Test.Repo]
 
+config :kaffy,
+  otp_app: :usher,
+  ecto_repo: Usher.Test.Repo,
+  router: Usher.Test.Router,
+  resources: &Usher.Kaffy.Config.create_resources/1,
+  scheduled_tasks: [
+    Usher.Tasks
+  ]
+
 import_config "#{config_env()}.exs"

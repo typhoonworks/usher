@@ -87,6 +87,25 @@ defmodule Usher do
     Config.repo().get!(Invitation, id)
   end
 
+  def get_invitation_by_name(name) do
+    Config.repo().get_by(Invitation, name: name)
+  end
+
+  @doc """
+  Gets a single invitation usage by ID. Raises if not found.
+
+  ## Examples
+
+      iex> Usher.get_invitation_usage!(id)
+      %Usher.Invitation{}
+
+      iex> Usher.get_invitation_usage!("nonexistent")
+      ** (Ecto.NoResultsError)
+  """
+  def get_invitation_usage!(id) do
+    Config.repo().get!(InvitationUsage, id)
+  end
+
   @doc """
   Gets an invitation by token.
 
@@ -491,5 +510,24 @@ defmodule Usher do
     invitation
     |> InvitationUsageQuery.entity_exists_query(entity_type, entity_id, action)
     |> Config.repo().one()
+  end
+
+  def total_invitation_usages() do
+    Config.repo().aggregate(Usher.InvitationUsage, :count)
+  end
+
+  def total_invitations() do
+    Config.repo().aggregate(Usher.Invitation, :count)
+  end
+
+  import Ecto.Query
+
+  def total_active_invitations() do
+    query = from(i in Usher.Invitation, where: not is_nil(i.deleted_at))
+    Config.repo().aggregate(query, :count)
+  end
+
+  def get_invitation_usage() do
+    Config.repo().aggregate(Usher.InvitationUsage, :count)
   end
 end

@@ -29,14 +29,14 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - [x] Invitations with no expiration date.
 - [x] Linking invitation tokens to user accounts (e.g. to track which user registered with which invitation): Added in v0.3.0.
 - [x] Cryptographic signing of invitation tokens to prevent guessing tokens.
-- [ ] Web UI for managing invitation tokens.
+- [x] Web UI for managing invitation tokens.
+- [x] Soft delete for invitations to keep them in the database for analytics purposes. 
+- [x] Clean-up functions for expired invitations.
 - [ ] Invitation expiration after X number of uses (including one-time use links).
 - [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Descriptions for invitation links so you can provide context for its usage.
 - [ ] Add credo checks to ensure code quality.
 - [ ] Add status checks and run tests on pull requests.
-- [ ] Soft delete for invitations to keep them in the database for analytics purposes.
-- [ ] Clean-up functions for expired invitations.
 
 ## Installation
 Add `usher` to your list of dependencies in `mix.exs`:
@@ -52,6 +52,23 @@ Run the install script to create your migrations
 
 ```bash
 mix Usher.install
+```
+Add the following to routes.ex
+
+```elixir
+defmodule Router do
+use Kaffy.Routes,
+    scope: "/admin/crm",
+    pipe_through: [:browser, :kaffy_browser]
+
+  pipeline :kaffy_browser do
+    plug :accepts, ["html", "json"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+  end
 ```
 
 Usher requires Elixir 1.14 or later, and OTP 25 or later. It may work with earlier versions, but it wasn't tested against them.
