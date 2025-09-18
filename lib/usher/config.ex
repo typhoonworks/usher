@@ -30,6 +30,14 @@ defmodule Usher.Config do
           }
         }
 
+  @type invitation_token :: %{
+          required(:invitation) => %{invitation_token: string()}
+        }
+
+  @type signature_token :: %{
+          required(:invitation) => %{signature_token: string()}
+        }
+
   @type schema_overrides :: %{
           optional(:invitation) => %{custom_attributes_type: :map | module()}
         }
@@ -102,6 +110,22 @@ defmodule Usher.Config do
   @spec validations() :: validations()
   def validations do
     Application.get_env(:usher, :validations, %{})
+  end
+
+  @doc """
+  Returns invitation_token configuration for all schemas.
+  """
+  @spec invitation_token() :: invitation_token()
+  def invitation_token do
+    Application.get_env(:usher, :invitation_token, "invitation_token")
+  end
+
+  @doc """
+  Returns signature_token configuration for all schemas.
+  """
+  @spec signature_token() :: signature_token()
+  def signature_token do
+    Application.get_env(:usher, :signature_token, "s")
   end
 
   @doc """
@@ -294,7 +318,8 @@ defmodule Usher.Config do
           invitation_usage: %{
             valid_usage_entity_types: [:user, :company],
             valid_usage_actions: [:visited, :registered]
-          }
+          },
+        url_tokens: %{invitation_token: "xxx", signature_token: "xxx"}
         }
       ]
   """
@@ -304,7 +329,8 @@ defmodule Usher.Config do
       repo: repo(),
       token_length: token_length(),
       default_expires_in: default_expires_in(),
-      validations: validations()
+      validations: validations(),
+      url_tokens: %{invitation_token: invitation_token(), signature_token: signature_token()}
     ]
   end
 

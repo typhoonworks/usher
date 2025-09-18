@@ -334,6 +334,14 @@ defmodule Usher do
     |> Config.repo().update()
   end
 
+  @spec expire(Invitation.t()) ::
+          {:ok, Invitation.t()} | {:error, Ecto.Changeset.t()}
+  def expire(%Invitation{} = invitation) do
+    invitation
+    |> Invitation.changeset(%{expires_at: DateTime.now()})
+    |> Config.repo().update()
+  end
+
   @doc """
   Removes the expiration from an invitation, making it never expire.
 
@@ -371,7 +379,7 @@ defmodule Usher do
   """
   def invitation_url(token, base_url) do
     uri = URI.parse(base_url)
-    query = URI.encode_query([{"invitation_token", token}])
+    query = URI.encode_query([{Config.invitation_token(), token}])
 
     %{uri | query: query} |> URI.to_string()
   end
@@ -387,7 +395,12 @@ defmodule Usher do
   @spec signed_invitation_url(Signature.token(), Signature.signature(), String.t()) :: String.t()
   def signed_invitation_url(token, signature, base_url) do
     uri = URI.parse(base_url)
-    query = URI.encode_query([{"invitation_token", token}, {"s", signature}])
+
+    query =
+      URI.encode_query([
+        {Config.invitation_token(), token},
+        {Config.signature_token(), signature}
+      ])
 
     %{uri | query: query} |> URI.to_string()
   end
@@ -495,7 +508,7 @@ defmodule Usher do
   end
 
   @doc """
-  Gets all usage records for an invitiation, grouped by unique entity IDs.
+  Gets all usage records for an invitation, grouped by unique entity IDs.
 
   ## Options
 

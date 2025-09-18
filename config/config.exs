@@ -7,6 +7,8 @@ import Config
 
 config :logger, level: :warning
 
+config :usher, ecto_repos: [Usher.Test.Repo]
+
 config :usher,
   repo: Usher.Test.Repo,
   token_length: 16,
@@ -17,7 +19,9 @@ config :usher,
       valid_usage_actions: [:visited, :registered, :activated]
     }
   },
-  signing_secret: "test-secret"
+  signing_secret: "test-secret",
+  invitation_token: "invitation_token",
+  signature_token: "s"
 
 config :usher, Usher.Test.Repo,
   username: "postgres",
@@ -30,8 +34,6 @@ config :usher, Usher.Test.Repo,
   priv: "test/support",
   show_sensitive_data_on_connection_error: true,
   stacktrace: true
-
-config :usher, ecto_repos: [Usher.Test.Repo]
 
 config :kaffy,
   otp_app: :usher,
