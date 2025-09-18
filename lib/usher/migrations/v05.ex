@@ -7,12 +7,14 @@ defmodule Usher.Migrations.V05 do
   attributes for the newly created user.
   """
   use Ecto.Migration
+  import Ecto.SoftDelete.Migration
 
   def up(opts) do
     table_opts = Keyword.take(opts, [:prefix])
 
     alter table(:usher_invitations, table_opts) do
       add(:custom_attributes, :map)
+      soft_delete_columns()
     end
 
     # Update version comment to track migration state

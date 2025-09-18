@@ -8,6 +8,7 @@ defmodule Usher.Invitation do
   use Ecto.Schema
 
   import Ecto.Changeset
+  import Ecto.SoftDelete.Schema
 
   alias Usher.Config
 
@@ -47,6 +48,7 @@ defmodule Usher.Invitation do
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
     timestamps(type: :utc_datetime_usec)
+    soft_delete_schema()
   end
 
   @doc """

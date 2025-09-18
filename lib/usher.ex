@@ -176,7 +176,7 @@ defmodule Usher do
       {:error, %Ecto.Changeset{}}
   """
   def delete_invitation(%Invitation{} = invitation) do
-    Config.repo().delete(invitation)
+    Config.repo().soft_delete(invitation)
   end
 
   @doc """
