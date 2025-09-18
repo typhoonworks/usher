@@ -109,7 +109,7 @@ defmodule Usher.MixProject do
   defp package do
     [
       name: "usher",
-      maintainers: ["Arda Can Tugay", "Rui Freitas"],
+      maintainers: ["Arda Can Tugay", "Rui Freitas", "Jason Clark"],
       licenses: ["MIT"],
       links: %{GitHub: @source_url},
       files: ~w[lib .formatter.exs mix.exs README* LICENSE*]

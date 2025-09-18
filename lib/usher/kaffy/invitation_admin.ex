@@ -13,6 +13,7 @@ defmodule Usher.Kaffy.InvitationAdmin do
     import Phoenix.Component
 
     alias Usher.Invitation
+    alias Usher.Config
 
     import Usher.Utils, only: [format_date: 1]
 
@@ -43,20 +44,29 @@ defmodule Usher.Kaffy.InvitationAdmin do
         name: nil,
         token: nil,
         inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
-        expires_at: nil
+        expires_at: nil,
+        deleted_at: %{name: "Deleted", value: fn p -> deleted?(p) end}
       ]
+    end
+
+    def deleted?(record) do
+      case record.deleted_at do
+        nil -> ""
+        _ -> "🗴"
+      end
     end
 
     def form_fields(_) do
       [
-        id: %{create: :hidden, update: :show},
+        id: %{create: :hidden, update: :hidden},
         name: nil,
         description: nil,
         max_uses: nil,
         uses: nil,
         token: nil,
         inserted_at: %{create: :hidden, update: :show},
-        expires_at: nil
+        expires_at: nil,
+        deleted_at: %{create: :hidden, update: :show}
       ]
     end
 
@@ -69,12 +79,12 @@ defmodule Usher.Kaffy.InvitationAdmin do
       uses = conn.params["invitation"]["uses"]
 
       attrs = %{
-        "name" => name,
-        "token" => token,
-        "expires_at" => expires_at,
-        "description" => description,
-        "max_uses" => max_uses,
-        "uses" => uses
+        name: name,
+        token: token,
+        expires_at: expires_at,
+        description: description,
+        max_uses: max_uses,
+        uses: uses
       }
 
       Usher.create_invitation(attrs)
@@ -97,15 +107,17 @@ defmodule Usher.Kaffy.InvitationAdmin do
       expires_at = conn.params["invitation"]["expires_at"]
       description = conn.params["invitation"]["description"]
       max_uses = conn.params["invitation"]["max_uses"]
+      deleted_at = conn.params["invitation"]["deleted_at"]
       uses = conn.params["invitation"]["uses"]
 
       attrs = %{
-        "name" => name,
-        "token" => token,
-        "expires_at" => expires_at,
-        "description" => description,
-        "max_uses" => max_uses,
-        "uses" => uses
+        name: name,
+        token: token,
+        expires_at: expires_at,
+        description: description,
+        max_uses: max_uses,
+        deleted_at: deleted_at,
+        uses: uses
       }
 
       entry = Usher.Invitation.changeset(changeset, attrs) |> Config.repo().update()

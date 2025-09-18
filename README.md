@@ -35,7 +35,6 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - [x] Add credo checks to ensure code quality.
 - [x] Invitation expiration after X number of uses (including one-time use links).
 - [x] Descriptions for invitation links so you can provide context for its usage.
-- [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Add status checks and run tests on pull requests.
 
 ## Installation
@@ -54,20 +53,39 @@ Run the install script to create your migrations
 mix Usher.install
 ```
 
-Add the following to config.exs
+Add the following to runtime.exs
 
 ```elixir
-resources = &Myapp.Kaffy.Config.create_resources/1 ++ Usher.Kaffy.Config.create_resources/1
+
 config :kaffy,
   otp_app: :framework,
   ecto_repo: Myapp.Repo,
   router: MyappWeb.Router,
-  resources: resources,
+  resources: &Myapp.Kaffy.Config.create_resources/1,
   scheduled_tasks: [
     Myapp.Tasks,
     Usher.Tasks
   ]
 ```
+
+Add the following to create resources function in kaffy/config.exs
+
+```elixir
+def create_resources(_conn) do
+    [
+      invitations: [
+        resources: [
+          invitations: [schema: Usher.Invitation, admin: Usher.Kaffy.InvitationAdmin],
+          invitation_usages: [
+            schema: Usher.InvitationUsage,
+            admin: Usher.Kaffy.InvitationUsageAdmin
+          ]
+        ]
+      ]
+    ]
+end
+```
+
 Add the following to routes.ex
 
 ```elixir

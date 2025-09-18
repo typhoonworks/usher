@@ -16,6 +16,7 @@ defmodule Usher.Migrations.V05 do
       add(:custom_attributes, :map)
       add(:max_uses, :integer)
       add(:uses, :integer)
+      add(:description, :string)
       soft_delete_columns()
     end
 

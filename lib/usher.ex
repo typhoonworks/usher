@@ -87,6 +87,10 @@ defmodule Usher do
     Config.repo().get!(Invitation, id)
   end
 
+  def get_invitation(id) do
+    Config.repo().get(Invitation, id)
+  end
+
   def get_invitation_by_name(name) do
     Config.repo().get_by(Invitation, name: name)
   end
@@ -104,6 +108,10 @@ defmodule Usher do
   """
   def get_invitation_usage!(id) do
     Config.repo().get!(InvitationUsage, id)
+  end
+
+  def get_invitation_usage(id) do
+    Config.repo().get(InvitationUsage, id)
   end
 
   @doc """
@@ -143,6 +151,7 @@ defmodule Usher do
   """
   def validate_invitation_token(token) do
     with {:ok, invitation} <- get_invitation_by_token(token),
+         invitation <- increment_usage(invitation),
          :ok <- check_expiration(invitation.expires_at),
          :ok <- check_usage(invitation) do
       {:ok, invitation}
@@ -188,9 +197,17 @@ defmodule Usher do
 
   defp check_usage(invitation) do
     case invitation.usage >= invitation.max_uses do
-      :gt -> :ok
+      false -> :ok
       _ -> {:error, :invitation_expired}
     end
+  end
+
+  defp increment_usage(nil) do
+    {:error, :invitation_expired}
+  end
+
+  defp increment_usage(invitation) do
+    %{invitation | uses: invitation.uses + 1}
   end
 
   @doc """
@@ -205,7 +222,22 @@ defmodule Usher do
       {:error, %Ecto.Changeset{}}
   """
   def delete_invitation(%Invitation{} = invitation) do
-    Config.repo().soft_delete(invitation)
+    Config.repo().delete(invitation)
+  end
+
+  @doc """
+  Deletes an invitation usage.
+
+  ## Examples
+
+      iex> Usher.delete_invitation_usage(invitation)
+      {:ok, %Usher.InvitationUsage{}}
+
+      iex> Usher.delete_invitation_usage(bad_invitation)
+      {:error, %Ecto.Changeset{}}
+  """
+  def delete_invitation_usage(%Usher.InvitationUsage{} = invitation) do
+    Config.repo().delete(invitation)
   end
 
   @doc """

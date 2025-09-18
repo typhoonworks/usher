@@ -10,7 +10,7 @@ defmodule Usher.Kaffy.Config do
           invitations: [schema: Usher.Invitation, admin: Usher.Kaffy.InvitationAdmin],
           invitation_usages: [
             schema: Usher.InvitationUsage,
-            admin: Usher.Kaffy.InvitationUsagesAdmin
+            admin: Usher.Kaffy.InvitationUsageAdmin
           ]
         ]
       ]

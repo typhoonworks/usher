@@ -19,7 +19,7 @@ defmodule Usher.Invitation do
 
   @custom_attributes_type Config.custom_attributes_type()
 
-  @permitted_fields [:token, :name, :expires_at, :description, :max_uses, :uses]
+  @permitted_fields [:token, :name, :expires_at, :description, :max_uses, :uses, :deleted_at]
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -29,6 +29,7 @@ defmodule Usher.Invitation do
           name: String.t() | nil,
           description: String.t() | nil,
           expires_at: DateTime.t() | nil,
+          deleted_at: DateTime.t() | nil,
           usages: [Usher.InvitationUsage.t()] | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
@@ -42,8 +43,8 @@ defmodule Usher.Invitation do
     field(:name, :string)
     field(:description, :string)
     field(:expires_at, :utc_datetime)
-    field(:max_uses, :integer)
-    field(:uses, :integer)
+    field(:max_uses, :integer, default: 1)
+    field(:uses, :integer, default: 0)
 
     if @custom_attributes_type == :map do
       field(:custom_attributes, :map)
@@ -54,7 +55,7 @@ defmodule Usher.Invitation do
     has_many(:usages, Usher.InvitationUsage, foreign_key: :invitation_id)
 
     timestamps(type: :utc_datetime_usec)
-    soft_delete_schema()
+    soft_delete_schema(auto_exclude_from_queries?: false)
   end
 
   @doc """
