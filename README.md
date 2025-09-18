@@ -35,7 +35,7 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - [x] Add credo checks to ensure code quality.
 - [x] Invitation expiration after X number of uses (including one-time use links).
 - [x] Descriptions for invitation links so you can provide context for its usage.
-- [ ] Add status checks and run tests on pull requests.
+- [x] Add status checks and run tests on pull requests.
 
 ## Installation
 Add `usher` to your list of dependencies in `mix.exs`:
@@ -43,7 +43,7 @@ Add `usher` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:usher, "~> 0.5.1"}
+    {:usher, "~> 0.6.0"}
   ]
 end
 ```

@@ -1,0 +1,79 @@
+# Created with GitHubActions version 0.2.16
+name: Coveralls Report
+env:
+  GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+on:
+  - pull_request
+  - push
+jobs:
+  linux:
+    name: Test on Ubuntu (Elixir ${{ matrix.elixir }}, OTP ${{ matrix.otp }})
+    runs-on: ubuntu-20.04
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+    strategy:
+      matrix:
+        elixir:
+          - '1.15.6'
+        otp:
+          - '26.1'
+        exclude:
+          - elixir: '1.13.4'
+            otp: '26.1'
+          - elixir: '1.14.5'
+            otp: '22.3'
+          - elixir: '1.14.5'
+            otp: '26.1'
+          - elixir: '1.15.6'
+            otp: '22.3'
+          - elixir: '1.15.6'
+            otp: '23.3'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Restore deps
+        uses: actions/cache@v4.2.4
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+      - name: Restore _build
+        uses: actions/cache@v4.2.4
+        with:
+          path: _build
+          key: _build-${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+      - name: Get dependencies
+        run: mix deps.get
+      - name: Compile dependencies
+        run: MIX_ENV=test mix deps.compile
+      - name: Compile project
+        run: MIX_ENV=test mix compile
+      - name: Check code format
+        if: ${{ contains(matrix.elixir, '1.15.6') && contains(matrix.otp, '26.1') }}
+        run: mix format --check-formatted
+      - name: Run tests
+        run: MIX_ENV=test mix test
+        if: ${{ !(contains(matrix.elixir, '1.15.6') && contains(matrix.otp, '26.1')) }}
+      - name: Run tests with coverage
+        run: MIX_ENV=test mix coveralls.github
+        if: ${{ contains(matrix.elixir, '1.15.6') && contains(matrix.otp, '26.1') }}

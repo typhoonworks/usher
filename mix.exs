@@ -1,7 +1,7 @@
 defmodule Usher.MixProject do
   use Mix.Project
 
-  @version "0.5.1"
+  @version "0.6.0"
   @source_url "https://github.com/typhoonworks/usher"
 
   @test_environments [:test, :test_custom_attributes_embedded_schema]
