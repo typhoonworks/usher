@@ -15,6 +15,9 @@ defmodule Usher do
   @type invitation_usages_by_unique_entity :: list({entity_id(), map()})
   @type signed_token :: String.t()
 
+  defdelegate find_invitation_usage_by_email(string), to: Usher.InvitationUsage
+  defdelegate find_invitation_by_email(string), to: Usher.Invitation
+
   @doc """
   Creates a new invitation with a token and default expiration datetime.
 
@@ -207,7 +210,8 @@ defmodule Usher do
   end
 
   defp increment_usage(invitation) do
-    %{invitation | uses: invitation.uses + 1}
+    Invitation.changeset(invitation, %{uses: invitation.uses + 1}, %{})
+    |> Config.repo().update()
   end
 
   @doc """

@@ -88,4 +88,31 @@ defmodule Usher.InvitationUsage do
     # If configuration is not set, skip validation to allow tests without config
     RuntimeError -> changeset
   end
+
+  import Ecto.Query
+
+  @doc """
+    Find the user invitation by an email stored in invitation_usage.
+
+   ## Examples
+
+      iex> Usher.find_invitation_usage_by_email("test@example.com")
+    %Ecto.Changeset{valid?: true}
+  """
+
+  def find_invitation_usage_by_email(email) do
+    from(i in Usher.InvitationUsage,
+      where:
+        fragment(
+          "? @> ?",
+          i.meta,
+          fragment(
+            "jsonb_build_object(?, ?)",
+            "meta",
+            fragment("jsonb_build_array(?)", type(^email, :string))
+          )
+        )
+    )
+    |> Config.repo().all()
+  end
 end
