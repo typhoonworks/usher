@@ -11,7 +11,7 @@
   </a>
 </p>
 
-Usher is a web framework-agnostic invitation link management library for any Elixir application with Ecto.
+Usher is a web framework-agnostic invitation link management library for any Elixir application with Ecto. You can use it together with [Usher Web](https://github.com/typhoonworks/usher_web) if you want a web UI to manage invitations, or standalone if you want to build your own UI.
 
 >🚧 This library is in its infancy so you should treat all versions as early pre-release versions. We'll make the best effort to give heads up about breaking changes; however we can't guarantee backwards compatibility for every change.
 >
@@ -29,7 +29,7 @@ Usher is a web framework-agnostic invitation link management library for any Eli
 - [x] Invitations with no expiration date.
 - [x] Linking invitation tokens to user accounts (e.g. to track which user registered with which invitation): Added in v0.3.0.
 - [x] Cryptographic signing of invitation tokens to prevent guessing tokens.
-- [ ] Web UI for managing invitation tokens.
+- [x] Web UI for managing invitation tokens: [Usher Web](https://github.com/typhoonworks/usher_web)
 - [ ] Invitation expiration after X number of uses (including one-time use links).
 - [ ] One-time use invitation links tied to specific email addresses.
 - [ ] Descriptions for invitation links so you can provide context for its usage.
@@ -55,6 +55,8 @@ Follow the [installation instructions](guides/installation.md) to set up Usher i
 
 ## Getting Started
 Take a look at the [overview guide](guides/overview.md) for a quick introduction to Usher.
+
+If you're looking for a UI to manage invitations, check out [Usher Web](https://github.com/typhoonworks/usher_web).
 
 ## Phoenix Integration
 Take a look at the [Phoenix integration guide](guides/phoenix-integration.md) for details on how to set up Usher in your Phoenix application.

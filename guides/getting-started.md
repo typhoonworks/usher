@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will walk you through setting up Usher and creating your first invitations.
+This guide will walk you through setting up Usher and creating your first invitation.
 
 ## Prerequisites
 

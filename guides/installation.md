@@ -51,10 +51,7 @@ def deps do
 end
 ```
 
-> ⚠️ if you change the `json_library` configuration, make sure to recompile the Postgrex adapter. [Otherwise your change won't be picked up](https://hexdocs.pm/ecto/Ecto.Schema.html#module-the-map-type):
-```bash
-mix deps.clean --build postgrex
-```
+> ⚠️ if you change the `json_library` configuration, make sure to recompile the Postgrex adapter. [Otherwise your change won't be picked up](https://hexdocs.pm/ecto/Ecto.Schema.html#module-the-map-type): `mix deps.clean --build postgrex`
 
 ### 2. Generate Migration
 
@@ -98,7 +95,7 @@ mix ecto.migrate
 
 This will create the necessary tables for storing invitations and tracking their usage.
 
-> ℹ️ Pass in the `Usher.Migration.latest_version/0` value to `Usher.Migration.migrate_to_version/1` to apply only the necessary migrations.
+> ℹ️ Pass in the **integer value returned by the `Usher.Migration.latest_version/0` function** to `Usher.Migration.migrate_to_version/1` to apply only the necessary migrations.
 
 ## Next Steps
 

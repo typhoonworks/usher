@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a bug to help us improve Usher
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out a bug report!
+        Please make sure there is an existing issue describing your problem before opening a pull request.
+  - type: input
+    id: issue_ref
+    attributes:
+      label: Related issue
+      description: Link to an existing issue if this report is a follow-up.
+      placeholder: e.g., #123
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and why this matters
+      description: Explain the context behind the problem. Why is this important for you or your team? What is the impact if it's not solved?
+      placeholder: Describe the scenario, users affected, impact, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce (actual behavior)
+      description: Provide clear steps to reproduce the issue. Screenshots, recordings, error messages, and stack traces are very helpful. If you can't reproduce the issue, describe what you were doing when it occurred.
+      placeholder: 1. ...\n2. ...\n3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Usher version
+      description: The version of Usher you are using (from mix.lock or mix.exs).
+      placeholder: e.g., 0.3.1
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Elixir/Erlang versions, database (if applicable), and any other relevant details.
+      placeholder: Linux, Elixir 1.16.x, Erlang/OTP 26, PostgreSQL 15, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional info / logs
+      description: Screenshots, logs, or other context that might help.
+    validations:
+      required: false
