@@ -424,7 +424,7 @@ defmodule UsherTest do
   describe "set_invitation_expiration/2" do
     test "sets specific expiration date" do
       invitation = invitation_fixture()
-      target_date = ~U[2025-12-31 23:59:59Z]
+      target_date = ~U[2030-12-31 23:59:59Z]
 
       assert {:ok, updated_invitation} = Usher.set_invitation_expiration(invitation, target_date)
 
